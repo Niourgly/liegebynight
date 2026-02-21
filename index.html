@@ -330,7 +330,7 @@ details.character[open] .character-content {
   <!-- Dossier Sabbat -->
   <details class="enquete">
     <summary>
-      <span class="enq-title">Attaque du Sabbat</span>
+      <span class="enq-title">Attaque de l'Opéra</span>
       <span class="enq-meta status-warn">Statut : Ouverte</span>
       <span class="arrow">▶</span>
     </summary>
@@ -444,11 +444,13 @@ ul {
 <p>Tout écart aux protocoles entraînera un audit immédiat.</p>
 </div>
 
+<div id="messages"></div>
+
 <div class="box">
 <strong>Nouveau message :</strong><br>
-<input type="text" placeholder="Sujet"><br><br>
-<textarea placeholder="Rédiger message..."></textarea><br><br>
-<button onclick="alert('Transmission simulée.')">Envoyer</button>
+<input type="text" id="sujet" placeholder="Sujet"><br><br>
+<textarea id="message" placeholder="Rédiger message..."></textarea><br><br>
+<button onclick="envoyerMessage()">Envoyer</button>
 </div>
 </section>
 
@@ -493,6 +495,67 @@ function showSection(id) {
     document.getElementById(id).classList.add("active");
 }
 </script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+
+  apiKey: "AIzaSyBfrvYyWwrqNC7GuO1Km63wRgIfxtuUGBU",
+
+  authDomain: "liege-by-night.firebaseapp.com",
+
+  projectId: "liege-by-night",
+
+  storageBucket: "liege-by-night.firebasestorage.app",
+
+  messagingSenderId: "453217467536",
+
+  appId: "1:453217467536:web:2ada4ada4a549bf0482c15",
+
+  measurementId: "G-6ERWP95WGM"
+
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// ENVOYER MESSAGE
+window.envoyerMessage = async function() {
+  const sujet = document.getElementById("sujet").value;
+  const message = document.getElementById("message").value;
+
+  await addDoc(collection(db, "messages"), {
+    expediteur: "Utilisateur",
+    sujet: sujet,
+    contenu: message,
+    date: new Date()
+  });
+
+  alert("Message envoyé !");
+}
+
+// CHARGER MESSAGES
+async function chargerMessages() {
+  const querySnapshot = await getDocs(collection(db, "messages"));
+  const container = document.getElementById("messages");
+
+  querySnapshot.forEach((doc) => {
+    const data = doc.data();
+    container.innerHTML += `
+      <div class="box">
+        <strong>Expéditeur :</strong> ${data.expediteur}<br>
+        <strong>Sujet :</strong> ${data.sujet}
+        <p>${data.contenu}</p>
+      </div>
+    `;
+  });
+}
+
+chargerMessages();
+</script>
+
 
 </body>
 </html>
