@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>LIÈGE BY NIGHT</title>
+
+<style>
+body {
+    margin: 0;
+    background-color: #0a0f0a;
+    color: #00ff88;
+    font-family: "Courier New", monospace;
+}
+
+header {
+    padding: 20px;
+    border-bottom: 1px solid #00ff88;
+    text-align: center;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+nav {
+    display: flex;
+    justify-content: space-around;
+    border-bottom: 1px solid #00ff88;
+    padding: 10px;
+}
+
+nav button {
+    background: none;
+    border: 1px solid #00ff88;
+    color: #00ff88;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+nav button:hover {
+    background-color: #003322;
+}
+
+section {
+    display: none;
+    padding: 20px;
+}
+
+section.active {
+    display: block;
+}
+
+.box {
+    border: 1px solid #00ff88;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.locked {
+    color: #004422;
+}
+
+.status-good { color: #00ff88; }
+.status-warn { color: #ffaa00; }
+.status-alert { color: #ff4444; }
+
+textarea, input {
+    width: 100%;
+    background-color: black;
+    color: #00ff88;
+    border: 1px solid #00ff88;
+    padding: 5px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+TERMINAL DE SUPERVISION — CONSORTIUM<br>
+SECTEUR : LIÈGE<br>
+STATUT : ACTIF
+</header>
+
+<nav>
+<button onclick="showSection('accueil')">Accueil</button>
+<button onclick="showSection('carte')">Carte</button>
+<button onclick="showSection('individus')">Dossiers individuels</button>
+<button onclick="showSection('enquetes')">Dossiers d'enquêtes</button>
+<button onclick="showSection('messagerie')">Messagerie</button>
+<button onclick="showSection('archives')">Archives</button>
+</nav>
+
+<!-- ACCUEIL -->
+<section id="accueil" class="active" style="padding:60px 20px;">
+  <div class="box" id="terminal-box" 
+       style="font-size:1.05em; line-height:1.6em; white-space:pre-wrap; min-height:350px;">
+  </div>
+</section>
+
+<script>
+const terminal = document.getElementById("terminal-box");
+
+// Timestamp lisible et “impressionnant”
+const now = new Date();
+function pad(n){ return n.toString().padStart(2,'0'); }
+const timestamp =
+  pad(now.getDate()) + "/" +
+  pad(now.getMonth()+1) + "/" +
+  now.getFullYear() + " " +
+  pad(now.getHours()) + ":" +
+  pad(now.getMinutes()) + ":" +
+  pad(now.getSeconds()) + "." +
+  now.getMilliseconds().toString().padStart(3,'0') +
+  " CET (UTC+01:00)";
+
+// Génération session ID
+function randomHex(len){
+  const chars="abcdef0123456789";
+  let s="";
+  for(let i=0;i<len;i++){ s+=chars[Math.floor(Math.random()*chars.length)]; }
+  return s;
+}
+const sessionID = randomHex(16);
+const checksum = randomHex(64);
+const ip = `${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`;
+const latency = 12 + Math.floor(Math.random()*28); // 12-40ms
+const activeWatchers = 5 + Math.floor(Math.random()*8); // 5-12
+const anomalyScore = (Math.random()*0.05).toFixed(3); // 0.000-0.050
+
+// Contenu avec références ShreckNet
+const lines = [
+"CONSORTIUM NODE LGE-01",
+"SYS.VERSION 3.4.12-LTS",
+"kernel ............... 5.12.18",
+"",
+"[BOOTSTRAP]",
+"memory check ......... OK",
+"integrity hash ....... " + checksum.substring(0,16),
+"ShreckNet modules .... loaded",
+"boot latency ........ " + latency + "ms",
+"",
+"[AUTH]",
+"session id ........... " + sessionID,
+"client endpoint ...... " + ip,
+"reverse lookup ....... resolved",
+"timestamp ............ " + timestamp,
+"ShreckNet sync ........ active",
+"",
+"[READY]",
+"",
+"Bienvenue, Censeur."
+];
+
+let lineIndex = 0;
+let charIndex = 0;
+
+function typeEffect() {
+  if(lineIndex < lines.length){
+    if(charIndex < lines[lineIndex].length){
+      terminal.textContent += lines[lineIndex][charIndex];
+      charIndex++;
+      setTimeout(typeEffect, 12);
+    } else {
+      terminal.textContent += "\n";
+      lineIndex++;
+      charIndex = 0;
+      setTimeout(typeEffect, 80);
+    }
+  }
+}
+
+typeEffect();
+</script>
+
+<!-- CARTE -->
+<section id="carte">
+<h2>Domaine de Liège</h2>
+
+<div style="width: 100%; overflow: hidden; height: 512px; border: 1px solid #00ff88; box-sizing: border-box;">
+  <iframe 
+     src="https://www.google.com/maps/d/u/0/embed?mid=1cwPK7_Z1yUSMlz6z_Jw9_OSxnmGJmc0&ehbc=2E312F&noprof=1"
+     width="100%"
+     height="812"
+     frameborder="0"
+     style="margin-top: -150px; border: 0;">
+  </iframe>
+</div>
+
+<div class="box">
+Elysiums :
+<ul>
+<li>Opéra royal de Wallonie — Laure Nolveaux</li>
+<li>Discothèque Champs Élysées — Charles Nassau</li>
+<li>Bar Le St. Giles — Théodore Grignoux</li>
+</ul>
+</div>
+</section>
+
+
+<!-- DOSSIERS INDIVIDUELS -->
+<section id="individus">
+  <h2>Descendants</h2>
+
+  <!-- Relationship map -->
+  <div style="width: 100%; height: 600px; border: 1px solid #00ff88; box-sizing: border-box;">
+    <iframe 
+       src="https://embed.kumu.io/130b401cf6efe888b913567541e9bbe8"
+       width="100%"
+       height="100%"
+       frameborder="0"
+       style="border:0;">
+    </iframe>
+  </div>
+  <br>
+
+  <!-- Exemple de personnage -->
+  <details class="character">
+    <summary>
+      <span class="char-name">PNJ-01</span>
+      <span class="char-meta status-good">Actif</span>
+      <span class="arrow">▶</span>
+    </summary>
+
+    <div class="character-content">
+      <div class="box">
+        <strong>Note Interne :</strong><br>
+        Extrêmement gay
+      </div>
+      <div class="box">
+        <img src="artwork1.jpg" style="max-width:48%; margin-right:2%;">
+        <img src="artwork2.jpg" style="max-width:48%;">
+      </div>
+    </div>
+  </details>
+</section>
+
+<style>
+.character summary {
+    padding: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    border: 1px solid #00ff88;
+    border-radius: 5px;
+    background-color: #001100;
+    position: relative;
+}
+
+.character summary:hover {
+    background-color: #002200;
+}
+
+/* Statut à droite */
+.char-meta {
+    position: absolute;
+    right: 25px;
+}
+
+/* Flèche à l'extrême droite */
+.arrow {
+    position: absolute;
+    right: 5px;
+    transition: transform 0.3s;
+}
+
+details.character[open] .arrow {
+    transform: rotate(90deg);
+}
+
+/* Contenu déroulant */
+.character-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    padding: 10px;
+    border-left: 1px solid #00ff88;
+    border-right: 1px solid #00ff88;
+    border-bottom: 1px solid #00ff88;
+}
+
+details.character[open] .character-content {
+    max-height: 1000px;
+}
+
+/* Statuts colorés */
+.char-meta.status-good { color: #00ff88; } /* Actif */
+.char-meta.status-warn { color: #ffaa00; } /* À surveiller */
+.char-meta.status-alert { color: #ff4444; } /* Inactif / critique */
+</style>
+
+<script>
+  // Animation ouverture pour personnages
+  document.querySelectorAll('details.character').forEach(det => {
+    const arrow = det.querySelector('.arrow');
+    const content = det.querySelector('.character-content');
+
+    det.addEventListener('toggle', () => {
+      if(det.open){
+        content.style.maxHeight = content.scrollHeight + 'px';
+      } else {
+        content.style.maxHeight = '0';
+      }
+    });
+  });
+</script>
+
+<!-- ENQUÊTES -->
+<section id="enquetes">
+  <h2>Dossiers d'enquête</h2>
+
+  <!-- Dossier Degrelle -->
+  <details class="enquete">
+    <summary>
+      <span class="enq-title">Affaire Degrelle</span>
+      <span class="enq-meta status-good">Statut : Classée</span>
+      <span class="arrow">▶</span>
+    </summary>
+
+    <div class="enquete-content box">
+      <p>En 2000, la disparition de Sandrine Leroy a déclenché une enquête menée par Laure Nolveaux et Lambert.<br>
+      Rapidement, une cellule du Sabbat a été repérée dans le repaire de Robert Degrelle, qui les aidait activement.<br>
+      Lambert a dirigé l’assaut final : le nid a été détruit et tous ses membres éliminés.<br>
+      Robert Degrelle a été jugé sur place pour haute trahison et exécuté par Lambert.<br>
+      Un allié Nosfératu de Degrelle, Heudebert, a disparu la même nuit.<br>
+      Les lieux utilisés par le Sabbat ont été rasés pour garantir la Mascarade et effacer toute trace.</p>
+    </div>
+  </details>
+
+<br>
+
+  <!-- Dossier Sabbat -->
+  <details class="enquete">
+    <summary>
+      <span class="enq-title">Attaque du Sabbat</span>
+      <span class="enq-meta status-warn">Statut : Ouverte</span>
+      <span class="arrow">▶</span>
+    </summary>
+
+    <div class="enquete-content box">
+      <p>Lors d'un rassemblement à l'Élysée de l'Opéra Royal, le Sabbat a lancé une attaque brutale et coordonnée.<br>
+      Les clans Brujah et Gangrel ont tenu la ligne de front, subissant de lourdes pertes pour protéger la cité.<br>
+      L'artillerie sorcière du clan Tremere a détruit les assaillants restants, et Lambert a traqué les fuyards avec des Brujah survivants.<br>
+      Pour préserver la Mascarade, l'incident a été couvert comme une attaque terroriste. Deux mortels ont été sélectionnés pour confesser les crimes et sont en détention.</p>
+      <p><strong>Bilan des pertes :</strong></p>
+      <ul>
+        <li>Tania</li>
+        <li>Léon</li>
+        <li>Walter</li>
+        <li>Paul Gravier</li>
+        <li>Marie Jourdan</li>
+        <li>Térence</li>
+        <li>Luc</li>
+        <li>Annabelle Vicomte</li>
+        <li>Thomas Durieux</li>
+      </ul>
+      <p>Tous les assaillants connus ont été éliminés.</p>
+    </div>
+  </details>
+</section>
+
+<style>
+/* Style pour les enquêtes - intégré à ton thème */
+.enquete summary {
+    padding: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    border: 1px solid #00ff88;
+    border-radius: 5px;
+    background-color: #001100;
+    position: relative;
+}
+
+.enquete summary:hover {
+    background-color: #002200;
+}
+
+/* Statut aligné à droite */
+.enq-meta {
+    position: absolute;
+    right: 25px;
+}
+
+/* Flèche à l'extrême droite */
+.arrow {
+    position: absolute;
+    right: 5px;
+    transition: transform 0.3s;
+}
+
+details[open] .arrow {
+    transform: rotate(90deg);
+}
+
+/* Contenu déroulant */
+.enquete-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    padding: 10px;
+    border-left: 1px solid #00ff88;
+    border-right: 1px solid #00ff88;
+    border-bottom: 1px solid #00ff88;
+}
+details[open] .enquete-content {
+    max-height: 1000px; /* suffisant pour le texte */
+}
+
+/* Statuts colorés */
+.enq-meta.status-good { color: #00ff88; } /* Classée */
+.enq-meta.status-warn { color: #ffaa00; } /* Ouverte */
+.enq-meta.status-alert { color: #ff4444; } /* Critique */
+
+/* Listes lisibles */
+ul {
+    padding-left: 20px;
+    margin: 5px 0;
+}
+</style>
+
+<script>
+  // Animation ouverture
+  document.querySelectorAll('details.enquete').forEach(det => {
+    const arrow = det.querySelector('.arrow');
+    const content = det.querySelector('.enquete-content');
+
+    det.addEventListener('toggle', () => {
+      if(det.open){
+        content.style.maxHeight = content.scrollHeight + 'px';
+      } else {
+        content.style.maxHeight = '0';
+      }
+    });
+  });
+</script>
+
+
+<!-- MESSAGERIE -->
+<section id="messagerie">
+<h2>Messagerie interne</h2>
+
+<div class="box">
+<strong>Expéditeur :</strong> Directoire<br>
+<strong>Sujet :</strong> Rappel de conformité<br>
+<p>Tout écart aux protocoles entraînera un audit immédiat.</p>
+</div>
+
+<div class="box">
+<strong>Nouveau message :</strong><br>
+<input type="text" placeholder="Sujet"><br><br>
+<textarea placeholder="Rédiger message..."></textarea><br><br>
+<button onclick="alert('Transmission simulée.')">Envoyer</button>
+</div>
+</section>
+
+<!-- ARCHIVES -->
+<section id="archives">
+<h2>Archives</h2>
+
+<div class="box">
+<h3>Chronologie</h3>
+???? — Childéric, Alterec, et Clotilde se succèdent à la tête de la ville<br>
+1453 — Hélène de Chantraine devient Princesse de Liège<br>
+1493 — La Camarilla est créée à la Convention d'Épines<br>
+16XX — Liège rejoint la Camarilla<br>
+1793 — Hélène de Chantraine meurt pendant la seconde restauration autrichienne<br>
+1814 — Madeleine d’Aurigny devient Marquise de Liège pendant les guerres napoléoniennes, la ville se soumet à Paris<br>
+1830 — Le Consortium est créé<br>
+1915 — Jean Gosuin devient Prince de Liège pendant la première guerre mondiale, la ville rejoint le Consortium<br>
+1939 — Tarcisus devient Prince de Liège pendant la seconde guerre mondiale<br>
+1945 — Jean Gosuin redevient Prince de Liège pendant la libération<br>
+1965 — Fondation du Club des Femmes Immortelles par Tania<br>
+1972 — Arrivée du clan Giovanni à Liège<br>
+1991 — Signature du traité de non-agression avec les Lupins locaux, négocié par Chriss<br>
+1998 — Les Giovanni quittent Liège<br>
+1999 — Les Gangrel quittent la Camarilla<br>
+2000 — Affaire Degrelle<br>
+09/01/2008 — Raid du Sabbat à l'Opéra Royal<br>
+</div>
+
+<div class="box">
+<h3>Calendrier Opérationnel</h3>
+<ul>
+<li>12/03 — RdV avec Lambert</li>
+</ul>
+</div>
+</section>
+
+<script>
+function showSection(id) {
+    document.querySelectorAll("section").forEach(sec => {
+        sec.classList.remove("active");
+    });
+    document.getElementById(id).classList.add("active");
+}
+</script>
+
+</body>
+</html>
