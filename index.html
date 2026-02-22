@@ -78,26 +78,109 @@ document.querySelectorAll('details.character,details.enquete').forEach(det=>{
 <div class="box">Elysiums :
 <ul>
 <li>Opéra royal de Wallonie — Laure Nolveaux</li>
-<li>Discothèque Champs Élysées — Charles Nassau</li>
+<li>Discothèque Champs Élysées — Karl Nassau</li>
 <li>Bar Le St. Giles — Théodore Grignoux</li>
 </ul>
 </div>
 </section>
 
 <!-- DOSSIERS INDIVIDUELS -->
+
 <section id="individus">
 <h2>Descendants</h2>
 <div style="width:100%;height:600px;border:1px solid #0f8;box-sizing:border-box;">
 <iframe src="https://embed.kumu.io/130b401cf6efe888b913567541e9bbe8" width="100%" height="100%" frameborder="0" style="border:0;"></iframe>
 </div>
 <br>
+
 <details class="character">
-<summary><span class="char-name">PNJ-01</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+<summary><span class="char-name">Lyle Kresten</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
 <div class="character-content">
-<div class="box"><strong>Note Interne :</strong><br>Extrêmement gay</div>
-<div class="box"><img src="artwork1.jpg" style="max-width:48%;margin-right:2%;"><img src="artwork2.jpg" style="max-width:48%;"></div>
+  <div class="box"><strong>Note Interne :</strong><br>Primogène Tremere et Régent</div>
+
+  <!-- Grid scrollable -->
+  <div class="box" style="max-height:500px; overflow:auto; display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:5px; padding:5px;">
+    <!-- 44 images avec preview -->
+    <img class="thumb" src="Lyle1.jpg" data-large="Lyle1.jpg">
+    <img class="thumb" src="Lyle2.jpg" data-large="Lyle2.jpg">
+    <img class="thumb" src="Lyle3.jpg" data-large="Lyle3.jpg">
+    <img class="thumb" src="Lyle4.jpg" data-large="Lyle4.jpg">
+    <img class="thumb" src="Lyle5.jpg" data-large="Lyle5.jpg">
+    <img class="thumb" src="Lyle6.jpg" data-large="Lyle6.jpg">
+    <img class="thumb" src="Lyle7.jpg" data-large="Lyle7.jpg">
+    <img class="thumb" src="Lyle8.jpg" data-large="Lyle8.jpg">
+    <img class="thumb" src="Lyle9.jpg" data-large="Lyle9.jpg">
+    <img class="thumb" src="Lyle10.jpg" data-large="Lyle10.jpg">
+    <img class="thumb" src="Lyle11.jpg" data-large="Lyle11.jpg">
+    <img class="thumb" src="Lyle12.jpg" data-large="Lyle12.jpg">
+    <img class="thumb" src="Lyle13.jpg" data-large="Lyle13.jpg">
+    <img class="thumb" src="Lyle14.jpg" data-large="Lyle14.jpg">
+    <img class="thumb" src="Lyle15.jpg" data-large="Lyle15.jpg">
+    <img class="thumb" src="Lyle16.jpg" data-large="Lyle16.jpg">
+    <img class="thumb" src="Lyle17.jpg" data-large="Lyle17.jpg">
+    <img class="thumb" src="Lyle18.jpg" data-large="Lyle18.jpg">
+    <img class="thumb" src="Lyle19.jpg" data-large="Lyle19.jpg">
+    <img class="thumb" src="Lyle20.jpg" data-large="Lyle20.jpg">
+    <img class="thumb" src="Lyle21.jpg" data-large="Lyle21.jpg">
+    <img class="thumb" src="Lyle22.jpg" data-large="Lyle22.jpg">
+    <img class="thumb" src="Lyle23.jpg" data-large="Lyle23.jpg">
+    <img class="thumb" src="Lyle24.jpg" data-large="Lyle24.jpg">
+    <img class="thumb" src="Lyle25.jpg" data-large="Lyle25.jpg">
+    <img class="thumb" src="Lyle32.jpg" data-large="Lyle32.jpg">
+    <img class="thumb" src="Lyle33.jpg" data-large="Lyle33.jpg">
+    <img class="thumb" src="Lyle34.jpg" data-large="Lyle34.jpg">
+    <img class="thumb" src="Lyle35.jpg" data-large="Lyle35.jpg">
+    <img class="thumb" src="Lyle36.jpg" data-large="Lyle36.jpg">
+    <img class="thumb" src="Lyle37.jpg" data-large="Lyle37.jpg">
+    <img class="thumb" src="Lyle38.jpg" data-large="Lyle38.jpg">
+    <img class="thumb" src="Lyle39.jpg" data-large="Lyle39.jpg">
+	<img class="thumb" src="Lyle26.jpg" data-large="Lyle26.jpg">
+    <img class="thumb" src="Lyle27.jpg" data-large="Lyle27.jpg">
+    <img class="thumb" src="Lyle28.jpg" data-large="Lyle28.jpg">
+    <img class="thumb" src="Lyle29.jpg" data-large="Lyle29.jpg">
+    <img class="thumb" src="Lyle30.jpg" data-large="Lyle30.jpg">
+    <img class="thumb" src="Lyle31.jpg" data-large="Lyle31.jpg">
+    <img class="thumb" src="Lyle40.jpg" data-large="Lyle40.jpg">
+    <img class="thumb" src="Lyle41.jpg" data-large="Lyle41.jpg">
+    <img class="thumb" src="Lyle42.jpg" data-large="Lyle42.jpg">
+    <img class="thumb" src="Lyle43.jpg" data-large="Lyle43.jpg">
+    <img class="thumb" src="Lyle44.jpg" data-large="Lyle44.jpg">
+  </div>
 </div>
 </details>
+
+<!-- Lightbox overlay -->
+<div id="lightboxOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; justify-content:center; align-items:center;">
+  <img id="lightboxImage" style="max-width:90%; max-height:90%; object-fit:contain;">
+</div>
+
+<script>
+// Initialisation Lightbox
+const thumbs = document.querySelectorAll('.thumb');
+const overlay = document.getElementById('lightboxOverlay');
+const lightboxImage = document.getElementById('lightboxImage');
+
+thumbs.forEach(img => {
+  img.style.cursor = 'pointer';
+  img.style.width = '100%';
+  img.style.height = '150px';
+  img.style.objectFit = 'cover';
+  img.style.objectPosition = 'top';
+
+  img.addEventListener('click', () => {
+    lightboxImage.src = img.dataset.large;
+    overlay.style.display = 'flex';
+  });
+});
+
+// Fermer en cliquant sur le fond
+overlay.addEventListener('click', (e) => {
+  if(e.target === overlay){
+    overlay.style.display = 'none';
+  }
+});
+</script>
+
 </section>
 
 <!-- ENQUÊTES -->
