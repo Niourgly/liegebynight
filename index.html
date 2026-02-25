@@ -325,9 +325,48 @@ document.querySelectorAll('details.character,details.enquete').forEach(det=>{
 </div>
 </details>
 
+<details class="character">
+<summary><span class="char-name">Groupes</span><span class="char-meta status-alert">ERROR</span><span class="arrow">▶</span></summary>
+<div class="character-content">
+  <div class="box"><strong>Note Interne :</strong><br>Images de groupes</div>
+  <div class="box" style="max-height:500px; overflow:auto; display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:5px; padding:5px;">
+	<img class="thumb" src="Group1.jpg" data-large="Group1.jpg" data-caption="Les Fleurs de la Belle Époque">
+	<img class="thumb" src="Group2.jpg" data-large="Group2.jpg" data-caption="Lyle Kersten et Claudia Vonïgner">
+	<img class="thumb" src="Group3.jpg" data-large="Group3.jpg" data-caption="Lyle Kersten et Claudia Vonïgner">
+	<img class="thumb" src="Group4.jpg" data-large="Group4.jpg" data-caption="Les Fleurs de la Belle Époque">
+	<img class="thumb" src="Group5.jpg" data-large="Group5.jpg" data-caption="Tarcisus et Claudia">
+	<img class="thumb" src="Group6.jpg" data-large="Group6.jpg" data-caption="Lyle Kersten et Claudia Vonïgner">
+	<img class="thumb" src="Group7.jpg" data-large="Group7.jpg" data-caption="Lambert, Théodore et Gosuin">
+	<img class="thumb" src="Group8.jpg" data-large="Group8.jpg" data-caption="Laure et Claudia">
+	<img class="thumb" src="Group9.jpg" data-large="Group9.jpg" data-caption="Lyle, Claudia et [REDACTED]">
+	<img class="thumb" src="Group10.jpg" data-large="Group10.jpg" data-caption="Neve Rosetti, Jean-Pierre Griffin et Alicia Vandenstree">
+	<img class="thumb" src="Group11.jpg" data-large="Group11.jpg" data-caption="Victor de Sainte-Croix, Grégory Darvault et Docteur">
+	<img class="thumb" src="Group12.jpg" data-large="Group12.jpg" data-caption="Igor, Caterina et Adriano">
+	<img class="thumb" src="Group13.jpg" data-large="Group13.jpg" data-caption="Claudia et Lyle">
+	<img class="thumb" src="Group14.jpg" data-large="Group14.jpg" data-caption="Suzanne Gourand, Tania et Natacha">
+	<img class="thumb" src="Group15.jpg" data-large="Group15.jpg" data-caption="Henri Bowens, le Vénérable et Chriss">
+	<img class="thumb" src="Group16.jpg" data-large="Group16.jpg" data-caption="Lyle donne l'Embrace à Claudia">
+	<img class="thumb" src="Group17.jpg" data-large="Group17.jpg" data-caption="Armand Colin et Eric Artevelt">
+	<img class="thumb" src="Group18.jpg" data-large="Group18.jpg" data-caption="J'ai oublié">
+	<img class="thumb" src="Group19.jpg" data-large="Group19.jpg" data-caption="Machin, machin et Alicia Vandenstree">
+	<img class="thumb" src="Group20.jpg" data-large="Group20.jpg" data-caption="Jérôme Lehin et Annabelle Vicomte">
+	<img class="thumb" src="Group21.jpg" data-large="Group21.jpg" data-caption="Jean-Pierre Griffin, Alicia Vandenstree, et Neve Rosetti">
+	<img class="thumb" src="Group22.jpg" data-large="Group22.jpg" data-caption="Neve Rosetti et Gosuin">
+	<img class="thumb" src="Group23.jpg" data-large="Group23.jpg" data-caption="Lyle Kersten et Claudia Vonïgner">
+	<img class="thumb" src="Group24.jpg" data-large="Group24.jpg" data-caption="Lyle Kersten et Claudia Vonïgner">
+	<img class="thumb" src="Group25.jpg" data-large="Group25.jpg" data-caption="Tarcisus et Claudia Vonïgner">
+  </div>
+</div>
+</details>
+
 <!-- Lightbox overlay -->
-<div id="lightboxOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; justify-content:center; align-items:center;">
-  <img id="lightboxImage" style="max-width:90%; max-height:90%; object-fit:contain;">
+<div id="lightboxOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; justify-content:center; align-items:center; flex-direction:column;">
+  
+  <img id="lightboxImage" style="max-width:90%; max-height:80%; object-fit:contain;">
+  
+  <!-- Caption -->
+  <div id="lightboxCaption" style="margin-top:15px; color:#0f8; font-style:italic; text-align:center; max-width:80%; display:none;"></div>
+
 </div>
 
 <script>
@@ -335,6 +374,7 @@ document.querySelectorAll('details.character,details.enquete').forEach(det=>{
 const thumbs = document.querySelectorAll('.thumb');
 const overlay = document.getElementById('lightboxOverlay');
 const lightboxImage = document.getElementById('lightboxImage');
+const lightboxCaption = document.getElementById('lightboxCaption');
 
 thumbs.forEach(img => {
   img.style.cursor = 'pointer';
@@ -344,8 +384,17 @@ thumbs.forEach(img => {
   img.style.objectPosition = 'top';
 
   img.addEventListener('click', () => {
+    // ton système existant
     lightboxImage.src = img.dataset.large;
     overlay.style.display = 'flex';
+
+    // 🔥 AJOUT CAPTION
+    if (img.dataset.caption) {
+      lightboxCaption.textContent = img.dataset.caption;
+      lightboxCaption.style.display = 'block';
+    } else {
+      lightboxCaption.style.display = 'none';
+    }
   });
 });
 
@@ -424,7 +473,33 @@ Pour préserver la Mascarade, l'incident a été couvert comme une attaque terro
 2000 — Affaire Degrelle<br>
 09/01/2008 — Raid du Sabbat à l'Opéra Royal<br>
 </div>
-<div class="box"><h3>Calendrier Opérationnel</h3><ul><li>12/03 — RdV avec Lambert</li></ul></div>
+
+<div class="box">
+<h3>Calendrier opérationnel</h3>
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+<button onclick="prevMonth()">◀</button>
+<strong id="calendarTitle"></strong>
+<button onclick="nextMonth()">▶</button>
+</div>
+
+<div id="calendar" style="
+display:grid;
+grid-template-columns:repeat(7,1fr);
+gap:5px;
+text-align:center;
+"></div>
+
+<br>
+
+<div>
+<input type="date" id="eventDate">
+<input type="text" id="eventText" placeholder="Nouvel événement...">
+<button onclick="addEvent()">Ajouter</button>
+</div>
+
+</div>
+
 </section>
 
 <script type="module">
@@ -460,6 +535,110 @@ const q=query(collection(db,"messages"),orderBy("date","desc"));
 onSnapshot(q,snap=>{container.innerHTML="";snap.forEach(doc=>{const data=doc.data();const box=document.createElement("div");box.className="box";box.innerHTML=`<strong>Expéditeur :</strong> ${data.expediteur}<br><strong>Sujet :</strong> ${data.sujet}<p>${data.contenu}</p>`;container.appendChild(box);});});
 }
 chargerMessages();
+// =======================
+// CALENDRIER FIREBASE
+// =======================
+
+let currentDate = new Date(2008, 1, 1); // Février 2008
+let calendarEvents = {};
+
+// Rendu calendrier
+function renderCalendar(){
+  const calendar = document.getElementById("calendar");
+  const title = document.getElementById("calendarTitle");
+  if(!calendar || !title) return;
+
+  calendar.innerHTML = "";
+
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+
+  title.textContent = firstDay.toLocaleString("fr-FR", { month: "long", year: "numeric" });
+
+  const startDay = (firstDay.getDay() + 6) % 7; // Lundi = premier jour
+
+  // Cases vides avant le 1er
+  for(let i=0;i<startDay;i++){
+    calendar.innerHTML += "<div></div>";
+  }
+
+  // Jours du mois
+  for(let d=1; d<=lastDay.getDate(); d++){
+    const dateKey = `${year}-${month+1}-${d}`;
+    const dayBox = document.createElement("div");
+
+    dayBox.style.border = "1px solid #0f8";
+    dayBox.style.padding = "5px";
+    dayBox.style.minHeight = "60px";
+    dayBox.style.fontSize = "0.8em";
+
+    dayBox.innerHTML = `<strong>${d}</strong>`;
+
+    if(calendarEvents[dateKey]){
+      const ul = document.createElement("ul");
+      calendarEvents[dateKey].forEach(ev=>{
+        const li = document.createElement("li");
+        li.textContent = ev;
+        ul.appendChild(li);
+      });
+      dayBox.appendChild(ul);
+    }
+
+    calendar.appendChild(dayBox);
+  }
+}
+
+// Navigation mois
+window.prevMonth = function(){
+  currentDate.setMonth(currentDate.getMonth()-1);
+  renderCalendar();
+}
+
+window.nextMonth = function(){
+  currentDate.setMonth(currentDate.getMonth()+1);
+  renderCalendar();
+}
+
+// Ajouter événement
+window.addEvent = async function(){
+  const dateInput = document.getElementById("eventDate").value;
+  const textInput = document.getElementById("eventText").value.trim();
+  if(!dateInput || !textInput) return;
+
+  const date = new Date(dateInput);
+  const key = `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}`;
+
+  await addDoc(collection(db,"calendar"),{
+    date: key,
+    text: textInput,
+    createdAt: new Date()
+  });
+
+  document.getElementById("eventText").value="";
+}
+
+// Chargement temps réel
+function chargerCalendar(){
+  const q = query(collection(db,"calendar"), orderBy("createdAt","asc"));
+
+  onSnapshot(q, snap=>{
+    calendarEvents = {};
+    snap.forEach(doc=>{
+      const data = doc.data();
+      if(!calendarEvents[data.date]){
+        calendarEvents[data.date] = [];
+      }
+      calendarEvents[data.date].push(data.text);
+    });
+
+    renderCalendar();
+  });
+}
+
+chargerCalendar();
 </script>
 </body>
 </html>
