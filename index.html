@@ -483,8 +483,8 @@ document.querySelectorAll(".gallery").forEach(gallery => {
 
   for(let i = 1; i <= count; i++){
     const img = document.createElement("img");
-    img.src = prefix + i + ".jpg"; 
-    img.dataset.large = img.src;
+	img.src = "images/" + prefix + i + ".jpg"; 
+	img.dataset.large = img.src;
     img.className = "thumb";
 
     img.style.width = "150px";
