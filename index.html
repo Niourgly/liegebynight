@@ -4,1009 +4,516 @@
 <meta charset="UTF-8">
 <title>LIÈGE BY NIGHT</title>
 <style>
-body{margin:0;background:#0a0f0a;color:#0f8;font-family:"Courier New",monospace;}
-header{padding:20px;border-bottom:1px solid #0f8;text-align:center;font-weight:bold;letter-spacing:2px;}
-nav{display:flex;justify-content:space-around;border-bottom:1px solid #0f8;padding:10px;}
-nav button{background:none;border:1px solid #0f8;color:#0f8;padding:5px 10px;cursor:pointer;}
-nav button:hover{background:#033;}
-section{display:none;padding:20px;}
-section.active{display:block;}
-.box{border:1px solid #0f8;padding:15px;margin-bottom:20px;}
-.locked{color:#044;}
-.status-good{color:#0f8;}
-.status-warn{color:#fa0;}
-.status-alert{color:#f44;}
-textarea,input{width:100%;background:#000;color:#0f8;border:1px solid #0f8;padding:5px;}
-.character summary,.enquete summary{padding:10px;cursor:pointer;display:flex;align-items:center;border:1px solid #0f8;border-radius:5px;background:#010;color:#0f8;position:relative;}
-.character summary:hover,.enquete summary:hover{background:#022;}
-.char-meta,.enq-meta{position:absolute;right:25px;}
-.arrow{position:absolute;right:5px;transition:transform .3s;}
-details[open] .arrow{transform:rotate(90deg);}
-.character-content,.enquete-content{max-height:0;overflow:hidden;transition:max-height .3s ease;padding:10px;border-left:1px solid #0f8;border-right:1px solid #0f8;border-bottom:1px solid #0f8;}
-details[open] .character-content,details[open] .enquete-content{max-height:1000px;}
-.char-meta.status-good,.enq-meta.status-good{color:#0f8;}
-.char-meta.status-warn,.enq-meta.status-warn{color:#fa0;}
-.char-meta.status-alert,.enq-meta.status-alert{color:#f44;}
-ul{padding-left:20px;margin:5px 0;}
+*{box-sizing:border-box}
+body{margin:0;background:#0a0f0a;color:#0f8;font-family:"Courier New",monospace}
+header{padding:20px;border-bottom:1px solid #0f8;text-align:center;font-weight:bold;letter-spacing:2px}
+nav{display:flex;justify-content:space-around;border-bottom:1px solid #0f8;padding:10px}
+nav button{background:none;border:1px solid #0f8;color:#0f8;padding:5px 10px;cursor:pointer}
+nav button:hover{background:#033}
+section{display:none;padding:20px}
+section.active{display:block}
+.box{border:1px solid #0f8;padding:15px;margin-bottom:20px}
+.status-good{color:#0f8}
+.status-warn{color:#fa0}
+.status-alert{color:#f44}
+textarea,input{width:100%;background:#000;color:#0f8;border:1px solid #0f8;padding:5px}
+details summary{padding:10px;cursor:pointer;display:flex;align-items:center;border:1px solid #0f8;border-radius:5px;background:#010;color:#0f8;position:relative}
+details summary:hover{background:#022}
+.char-meta,.enq-meta{position:absolute;right:25px}
+.arrow{position:absolute;right:5px;transition:transform .3s}
+details[open] .arrow{transform:rotate(90deg)}
+.char-content,.enq-content{max-height:0;overflow:hidden;transition:max-height .3s ease;padding:0 10px;border:1px solid #0f8;border-top:none}
+details[open] .char-content,details[open] .enq-content{max-height:2000px;padding:10px}
+ul{padding-left:20px;margin:5px 0}
 </style>
 </head>
 <body>
+
 <header>TERMINAL DE SUPERVISION — CONSORTIUM<br>SECTEUR : LIÈGE<br>STATUT : ACTIF</header>
+
 <nav>
-<button onclick="showSection('accueil')">Accueil</button>
-<button onclick="showSection('carte')">Carte</button>
-<button onclick="showSection('individus')">Dossiers individuels</button>
-<button onclick="showSection('enquetes')">Dossiers d'enquêtes</button>
-<button onclick="showSection('messagerie')">Messagerie</button>
-<button onclick="showSection('archives')">Archives</button>
+  <button onclick="show('accueil')">Accueil</button>
+  <button onclick="show('carte')">Carte</button>
+  <button onclick="show('individus')">Dossiers individuels</button>
+  <button onclick="show('enquetes')">Dossiers d'enquêtes</button>
+  <button onclick="show('messagerie')">Messagerie</button>
+  <button onclick="show('archives')">Archives</button>
 </nav>
 
 <!-- ACCUEIL -->
-<section id="accueil" class="active" style="padding:60px 20px;">
-<div class="box" id="terminal-box" style="font-size:1.05em;line-height:1.6em;white-space:pre-wrap;min-height:350px;"></div>
+<section id="accueil" class="active" style="padding:60px 20px">
+  <div class="box" id="terminal-box" style="font-size:1.05em;line-height:1.6em;white-space:pre-wrap;min-height:350px"></div>
 </section>
-
-<script>
-// Terminal
-const terminal=document.getElementById("terminal-box");
-const now=new Date();
-function pad(n){return n.toString().padStart(2,'0');}
-const timestamp=pad(now.getDate())+"/"+pad(now.getMonth()+1)+"/"+now.getFullYear()+" "+pad(now.getHours())+":"+pad(now.getMinutes())+":"+pad(now.getSeconds())+"."+now.getMilliseconds().toString().padStart(3,'0')+" CET (UTC+01:00)";
-function randomHex(len){let s="";const c="abcdef0123456789";for(let i=0;i<len;i++){s+=c[Math.floor(Math.random()*c.length)];}return s;}
-const sessionID=randomHex(16),checksum=randomHex(64),ip=`${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`,latency=12+Math.floor(Math.random()*28);
-const lines=["CONSORTIUM NODE LGE-01","SYS.VERSION 3.4.12-LTS","kernel ............... 5.12.18","[BOOTSTRAP]","memory check ......... OK","integrity hash ....... "+checksum.substring(0,16),"ShreckNet modules .... loaded","boot latency ........ "+latency+"ms","[AUTH]","session id ........... "+sessionID,"client endpoint ...... "+ip,"reverse lookup ....... resolved","timestamp ............ "+timestamp,"ShreckNet sync ........ active","[READY]","Bienvenue, Censeur."];
-let lineIndex=0,charIndex=0;
-function typeEffect(){if(lineIndex<lines.length){if(charIndex<lines[lineIndex].length){terminal.textContent+=lines[lineIndex][charIndex];charIndex++;setTimeout(typeEffect,12);}else{terminal.textContent+="\n";lineIndex++;charIndex=0;setTimeout(typeEffect,80);}}}
-typeEffect();
-
-// Toggle sections
-function showSection(id){document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));document.getElementById(id).classList.add("active");}
-
-// Toggle personnages/enquêtes
-document.querySelectorAll('details.character,details.enquete').forEach(det=>{
-  const content=det.querySelector('.character-content,.enquete-content');
-  det.addEventListener('toggle',()=>{content.style.maxHeight=det.open?content.scrollHeight+'px':'0';});
-});
-</script>
 
 <!-- CARTE -->
 <section id="carte">
-<h2>Domaine de Liège</h2>
-<div style="width:100%;overflow:hidden;height:512px;border:1px solid #0f8;box-sizing:border-box;">
-<iframe src="https://www.google.com/maps/d/u/0/embed?mid=1cwPK7_Z1yUSMlz6z_Jw9_OSxnmGJmc0&ehbc=2E312F&noprof=1" width="100%" height="812" frameborder="0" style="margin-top:-150px;border:0;"></iframe>
-</div>
-<div class="box">Elysiums :
-<ul>
-<li>Opéra royal de Wallonie — Laure Nolveaux</li>
-<li>Discothèque Champs Élysées — Karl Nassau</li>
-<li>Bar Le St. Giles — Théodore Grignoux</li>
-</ul>
-</div>
+  <h2>Domaine de Liège</h2>
+  <div style="width:100%;overflow:hidden;height:512px;border:1px solid #0f8">
+    <iframe src="https://www.google.com/maps/d/u/0/embed?mid=1cwPK7_Z1yUSMlz6z_Jw9_OSxnmGJmc0&ehbc=2E312F&noprof=1" width="100%" height="812" frameborder="0" style="margin-top:-150px;border:0"></iframe>
+  </div>
+  <div class="box">Elysiums :
+    <ul>
+      <li>Opéra royal de Wallonie — Laure Nolveaux</li>
+      <li>Discothèque Champs Élysées — Karl Nassau</li>
+      <li>Bar Le St. Giles — Théodore Grignoux</li>
+    </ul>
+  </div>
 </section>
 
 <!-- DOSSIERS INDIVIDUELS -->
-
 <section id="individus">
-<h2>Descendants</h2>
-<div style="width:100%;height:600px;border:1px solid #0f8;box-sizing:border-box;">
-<iframe src="https://embed.kumu.io/130b401cf6efe888b913567541e9bbe8" width="100%" height="100%" frameborder="0" style="border:0;"></iframe>
-</div>
-<br>
-<details class="character">
-<summary>
-<span class="char-name">Adriano Guicciardini</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Homme de goût et d’un certain mystère, Adriano est un poseur, connu pour son implication dans le monde de la finance. Il est arrivé en ville à la fin du XIXᵉ siècle pour informer la communauté que sa dame avait rencontré sa Mort Finale en Italie. Un test sanguin a prouvé qu’il était bien son infant et qu’il ne l’avait pas diablerisée. Adriano s’est fait l’ennemi du Prince Gosuin lorsqu’il a racheté les parts d’une société importante qui était aux mains de Giovanni. Mais tout est permis dans le monde de la finance, et Gosuin ne pouvait tout simplement pas égaler l’énorme somme nécessaire à l'achat de ce qu'il convoitait.</div>
-<div class="box gallery" data-prefix="Adriano" data-count="8"></div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Aleister Spencer</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Aleister Spencer est une goule au service du clan Tremere qui occupe actuellement la fonction de gardien de la bibliothèque de la Fondation.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Alicia Vandenstree</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Actrice extraordinaire à la fin des années 1940, Alicia s’est imposée comme l’une des harpies les plus acérées de la ville, se forgeant un nom par elle-même, à coups d’esprit, de présence et de cruauté parfaitement dosée.</div>
-<div class="box gallery" data-prefix="Alicia" data-count="6"></div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Alterec</span>
-<span class="char-meta status-warn">Inactif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Childéric, puis Alterec, et enfin Clotilde, ont été les princes et princesses médiévales de la ville d'avant l'an 1000 de notre ère jusqu'au XVe siècle. Ils sont morts dans des circonstances perdues pour l'histoire.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Annabelle Vicomte</span>
-<span class="char-meta status-warn">Inactif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Annabelle Vicomte était une musicienne talentueuse étreinte en 1938 par son amant Jérôme Lehin. Reconnue pour sa voix pure et sa maîtrise de la harpe, elle entretenait avec son sire une relation amoureuse sincère. Elle a été tuée pendant le raid du Sabbat, au grand dam de tout le clan Toréador.
-<br>Laure Nolveaux aurait un doute sur sa vraie Mort Finale : cendres différentes de celles qu'elle a déjà pu voir ? Il manquerait ses sous-vêtements, ainsi que des bijoux, dont un collier offert par Laure. Elle était avec Lambert quand elle est morte.
-</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Armand Colin</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Armand est agréable à côtoyer pour la plupart des gens. Son influence sur les cercles du droit et de la bureaucratie n’est un secret pour personne.
-Non présent lors de l'attaque.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Carcasse</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Carcasse était un bibliothécaire passionné par l’apprivoisement et le dressage de certains animaux. Il parlait toujours d’un ton bas et monotone et est connu pour être la personne qui tient les registres de l’histoire étrange de la ville. C’est la personne à rencontrer pour obtenir des détails sur des événements historiques spécifiques touchant le surnaturel. Difficile à trouver, le seul moyen de contacter Carcasse de manière fiable est la ligne téléphonique de M’sieur Pierre lorsqu’il s’agit de traiter des informations banales ; M’sieur Pierre organise alors la rencontre entre Carcasse et les Descendants ou la goule qui requiert ses talents.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Caterina Giovanni</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Caterina Giovanni était autrefois une goule, étreinte par son maître juste avant que celui-ci ne soit contraint de quitter la ville. Depuis, elle est pourchassée par les Sétites, parfois de manière ouverte, parfois plus insidieuse. Elle a néanmoins réussi à survivre grâce au soutien du Club des Femmes Immortelles. Depuis la mort de leur cheffe, Tania, il ne lui reste plus que Suzanne Gourand — à peine plus âgée qu’elle — pour assurer sa protection. Par le passé, Caterina et son clan exerçaient un contrôle important sur les travailleurs et travailleuses du sexe. Cette domination a pris fin lorsque l’influence de Gosuin, doublée de sa haine farouche des Giovanni, a conduit au « nettoyage » complet des quais, désormais transformés en attraction touristique familiale. Malgré tout, Caterina a su préserver un réseau d’escortes solide : plus restreint qu’autrefois, mais bien plus rentable, composé de clients réguliers et fortunés. Caterina fait avant tout de son mieux pour survivre. Les Sétites seraient impitoyables s’ils la trouvaient sans protection hors de l’Élysée. Elle dépend fortement de ses goules et de son réseau de prostitution, qui constitue sa principale source de revenus — ou du moins la seule connue.
-<br>Non présente lors de l'attaque, avait organisée une contre soirée le même soir, avec Karl Nassau.</div>
-<div class="box gallery" data-prefix="Catherina" data-count="3"></div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Camille Simonis</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Camille est un Tremere qui se fait discret, même s'il a l'air de bien connaître la Cour de Liège. Etreint il y a une dizaine d'années, il n'est apparu pour de bon dans la société vampirique qu'au début des années 2000. Proche de Lyle, il l'est peut-être aussi de la discrète Claudia et semble plutôt rester entre Tremere. Il ne cache pas son intérêt pour la technologie même s'il semble suivre les traditions à la lettre. Il est devenu Censeur auprès du Consortium en 2005, assez rapidement pour un vampire aussi jeune.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Céline</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Céline est la goule personnelle du Prince Gosuin et occupe la fonction de Sénéchal de Bordeaux. Parfaite et fidèle secrétaire, elle est chargée de gérer l'agenda du Prince, d'organiser les réunions et de surveiller l'application des édits ainsi que les limites du domaine. Son influence se manifeste également lors des nuits d'Élysée, où elle assure le filtrage des entrées pour les pièces réservées aux membres de la Descendance.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Charogne</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Un peu brusque et introverti, Charogne a été Étreint pour sa polyvalence, possédant de nombreuses compétences dans tous les domaines manuels. Déplacer des meubles, transporter des corps, transformer une scène de meurtre en suicide, réparer une voiture une heure avant l’aube… Charogne peut tout faire et entretenir des relations quelque peu cordiales avec quiconque a besoin de ses services. Iel est bien élevé, mais, comme tout travailleur manuel, peu de personnes se souviennent des détails identifiables.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Chriss</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Chriss est connu pour avoir approché les loups-garous à la fin des années 1980 afin de conclure un traité de non-agression. Cette démarche a été couronnée de succès : depuis lors, loups-garous et vampires ne se sont pas affrontés ouvertement.
-<br>Présent lors de l'attaque, a été blessé.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Christophe de Bri-Leveque</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Surtout connu pour avoir été témoin de la mort de son sire, dévoré par un loup-garou dans les années 1950, il est un homme sociable, capable de tenir une conversation agréable sur à peu près n’importe quel sujet. Il est souvent invité à des fêtes pour sa charmante compagnie.</div>
-<div class="box gallery" data-prefix="Christophe" data-count="2"></div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Childéric</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Childéric, puis Alterec, et enfin Clotilde, ont été les princes et princesses médiévales de la ville d'avant l'an 1000 de notre ère jusqu'au XVe siècle. Ils sont morts dans des circonstances perdues pour l'histoire.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Clotilde</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Childéric, puis Alterec, et enfin Clotilde, ont été les princes et princesses médiévales de la ville d'avant l'an 1000 de notre ère jusqu'au XVe siècle. Ils sont morts dans des circonstances perdues pour l'histoire.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Claudia Vonïgner</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Apprentie la mieux classée après Mikaël, Claudia reste distante de la Fondation. C’est une jeune femme discrète qui est souvent ignorée. Elle est la seule membre de sa coterie à ne pas s’être élevée à un rang d’importance au sein des Descendants.</div>
-<div class="box gallery" data-prefix="Claudia" data-count="16"></div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Docteur</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Docteur est le Primogène du clan Nosferatu. Véritable puits de connaissances, Docteur est un homme mystérieux dont personne hors du clan ne connaît le réel nom. À l’Élysée, il choisit de porter les vêtements du théâtre, donnant l’impression qu’il est un acteur en costume et portant un masque blanc pour cacher ses traits incompatibles avec la Mascarade. Il est réservé, mais lorsqu’on lui parle, on peut entendre et converser avec le Primogène compétent, éduqué et posé qu’il est.
-<br>Présent avant l'attaque au moins.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Dominique Lejeune</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Malgré sa mauvaise réputation, Dominique est un Tremere bien élevé, avec un indéniable air de premier de la classe. Parfaitement sage à l’Élysée, il se montre accessible et sympathique, en particulier avec les plus jeunes, qui trouvent souvent plus de points communs avec lui qu’avec leurs aînés du Clan. Il traîne cependant une réputation tenace : Dominique semble toujours s’entourer des mauvaises personnes. La plupart de ses anciennes connaissances ont fini mortes ou victimes d’une chasse au sang, et son amitié notoire avec les Sétites n’arrange rien à sa crédibilité. Il a formé une coterie avec les deux plus jeunes Sétites de la ville, au grand dam de nombreux membres de la Descendance. Cette association sulfureuse suffit à susciter la méfiance à son égard, même en l’absence de preuves concrètes de trahison.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Emilio</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Emilio, l'aîné des infants de Mentophis, contrôle tout ce qui a trait à la prostitution et au trafic d'êtres vivants. Plus sociable que son frère, Emilio se rend parfois à l’Élysée avec son Sire pour essayer d'obtenir un peu d'influence et de ragots, mais jusqu'à présent, personne n'a vraiment accepté de soutenir les Sétites aussi ouvertement et d'utiliser leurs services (ou du moins l’assumer). Les Nosferatus sont moins chers et ce sont des Camaristes. Pourtant, Emilio est la personne à contacter pour faire disparaître un corps si l'on ne veut pas avoir affaire aux faveurs des Nosferatu, et les rumeurs disent qu'il y a des accords entre lui et les Nosferatu pour travailler sur des entreprises de recyclage de corps.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Eric Artevelt</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Lointain et discret, Éric est souvent oublié, ne se distinguant pas particulièrement. En tant que Ventrue, il a su conserver de solides liens avec de nombreuses autres villes. À ce titre, il voyage fréquemment à l’étranger, avec la bénédiction de Gosuin, afin de défendre les intérêts du clan liégeois. Il est également reconnu pour sa maîtrise de plusieurs langues, notamment l’anglais, le néerlandais et l’allemand.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">François Villon</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>François Villon est le Roi de Paris et Prince de toute la France. Il a tenté de s'emparer de Liège et d'autres villes à l'ouest du Rhin dans le sillage de Napoléon.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Fred</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Reconnu dans les années 1990, Fred est le plus jeune membre du clan des Malkaviens. Il a été Étreint aux côtés de Marie Jourdan par Robert Degrelle, le second infant de Xavier (exécuté par Prévôt pour avoir caché des Sabbatiques). Marie a été tuée lors du récent raid du Sabbat, avec tous les autres membres de leur coterie, laissant Fred seul.
-<br>Présent lors de l'attaque.</div>
-<div class="box gallery" data-prefix="Fred" data-count="2"></div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Franz Derijk</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Ses influences sont restées cantonnées aux cercles universitaires. Franz a tendance à se renfermer sur lui-même, mais sa haine des Tremere, née de leur coup d’État durant la Seconde Guerre mondiale, n’est un secret pour personne. Son conservatisme et son attitude à l’égard des femmes — souhaitant qu’elles retrouvent le rôle que Dieu leur a réservé — ont provoqué de nombreux conflits avec ses pairs, allant jusqu’à une gifle publique.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Grégory Darvault</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Le Primogène Toréador est un romancier sympathique, accessible et élégant. La plupart des gens ne pensent pas grand-chose de Grégory, mais ils s’accordent tous à dire qu’il a du talent pour s’exprimer et créer des personnages profonds et convaincants. Il ne s’implique dans rien qui dépasse ses influences et son pouvoir personnel et, en tant que tel, n’est généralement pas considéré comme un danger sur le plan politique. Le raid du Sabbat lui a coûté sa petite-infante, Annabelle, et la rumeur court que sa Bête a pris le dessus pendant l'attaque, le poussant à fuir lâchement.
-<br>Présent lors de l'attaque.</div>
-<div class="box gallery" data-prefix="Gregory" data-count="2"></div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Hélène de Chantraine</span>
-<span class="char-meta status-warn">Inactif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Ancienne Princesse de Bordeaux de 1453 à 1793, il s'agit de celle qui fit intégrer la ville à la Camarilla nouvellement formée. Elle connaîtra la mort finale aux mains d'Anarques pendant la seconde restauration autrichienne.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Henri Bowens</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Henri fréquente souvent les Primogènes Toréador et Malkavien. Il est le Primogène « de Cour » pour son clan : il se comporte avec bonnes manières, réfléchit ses décisions et est généralement respecté par la Cour, bien qu’il soit le plus jeune des Primogènes.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Heudebert</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Heudebert a disparu de Liège en l'an 2000, juste au moment où la trahison de Degrelle (qui cachait un nid du Sabbat) a été découverte.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Igor</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Un Nosferatu vraiment curieux et optimiste, Igor est un joyeux petit luron. La plupart des gens sourient lorsqu’ils parlent de lui, tant il respire le bonheur. C’est un Nosferatu animé par la curiosité, l’occultisme et tout ce qu’il trouve bizarre et intéressant.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Jean Gosuin</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Le prince de la ville, Gosuin, a pris le pouvoir pendant la Première Guerre mondiale après un coup d'État contre la marquise Toréador. Connu comme un commerçant bourgeois, dans le domaine des armes, Gosuin était un orateur et un homme politique pendant la Révolution liégeoise. Il est étreint et fonde une coterie avec Théodore et Lambert. Gosuin est un homme calme et posé qui croit qu'il faut gouverner en ayant des « subordonnés consentants » au lieu de s'imposer par la force, selon les écrits de La Boétie.
-<br>Présent lors de l'attaque, voulait parler au Primogénat.</div>
-<div class="box gallery" data-prefix="Gosuin" data-count="2"></div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Jean-Pierre Griffin</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Griffin est la harpie Tremere, mais contrairement à la plupart des harpies, il va droit au but. Il n’a rien de sympathique et enterre six pieds sous terre la réputation sociale de quiconque, quel que soit son statut ou sa position, pour tout comportement incorrect à l’Élysée. Il est aussi aimable qu’un gardien de prison, incarnant la harpie taciturne par excellence. En tant que harpie, il traque et répertorie les faveurs de chacun, s’assurant que les dettes soient correctement remboursées.
-<br>Présent lors de l'attaque.</div>
-<div class="box gallery" data-prefix="Griffin" data-count="5"></div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Jérôme Lehin</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Calme et gentil, Jérôme est l’infant de Grégory. Il a formé une coterie avec la très talentueuse et féroce Laure, ainsi qu’avec la Tremere Claudia. Malgré qu'il soit devenu Mandataire de son clan, très peu de gens le connaissent réellement. La mort d’Annabelle, son infante et amante, a fait de Jérôme un reclus. Avant cela, son agenda consistait principalement à créer les meilleurs événements possibles pour son clan, qu’il s’agisse de vernissages ou de grandes soirées mondaines.
-<br>Non présent lors de l'attaque.
-</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Karl Nassau</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Par l’intermédiaire de ses goules, Karl possède certains des plus grands clubs de la ville et de la banlieue, ce qui lui confère un certain prestige, ainsi qu’un contrôle notable sur les télévisions et les radios locales. De nature décontractée, Karl est souvent perçu comme quelqu’un qui ne s’occupe que de ses propres affaires. L’une de ses goules dirige l’un des clubs les plus populaires de la ville, ayant acquis le statut d’Élysée : Les Champs Élysées.
-<br>Non présent lors de l'attaque, avait organisée une contre soirée le même soir, avec Caterina Giovanni.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Lambert</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Lambert est un homme assez discret, avec des tendances au TOC : il lève parfois les bras ou fait ses lacets dans les pires moments possibles. Il reste un shérif respecté et compétent, capable d’engager un combat contre un Brujah avec une bonne chance de s’en sortir. C’est le genre d’homme avec lequel on ne traite que lorsqu’il le faut. Lambert est patriote et se soucie peu des idéologies de la Camarilla. Sa rage contre le Sabbat l’a poussé à détruire son propre frère de sang, Robert Degrelle, pour avoir couvert un nid du Sabbat qui entraîna la mort de l’infant de Laure Nolveaux.
-<br>A raconté l'attaque de son point de vue, était avec Annabelle Vicomte à l'arrière de l'Opéra. Pour lui Marc Gillard pourrait être impliqué. Enquête en cours de son côté, échanges d'informations à faire. Info de M'sieur Pierre : aurait nettoyé la morgue d'où les nouveau-nés du Sabbat viendraient. P a son numéro.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Laure Nolveaux</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Orfèvre et joaillière de talent, Laure est un véritable prodige de l’esthétique et des astuces de marketing brillantes. Dans les années 1950, Gosuin lui accorde le titre prestigieux de Gardienne de l’Élysée. Sa force de caractère l’a également maintenue en vie à travers les tragédies : elle a perdu son infante et enfant à cause d’un diaboliste Lasombra, qu’elle a traqué aux côtés de Lambert, une chasse qui a mené à l’exécution de Robert Degrelle. La récente attaque lui a coûté une autre amie proche.
-<br>Présente lors de l'attaque. A des doutes sur la Mort Finale d'Annabelle même si d'après ses dires elle fait confiance à Lambert. Souhaite rester anonyme dans son témoignage. Thomas Durieux est mort sous ses yeux, elle l'a vengé.</div>
-<div class="box gallery" data-prefix="Laure" data-count="4"></div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Léon</span>
-<span class="char-meta status-warn">Inactif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Léon était un sang-clair intégré aux Paumés. Il effectuait des patrouilles lors de missions de surveillance délicates. Léon a malheureusement trouvé la Mort Finale lors du récent raid du Sabbat.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Luc</span>
-<span class="char-meta status-warn">Inactif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Luc, également connu sous le nom de Lucien lorsqu'il fréquentait la haute société, était un membre du clan Nosferatu grand acteur, qui possédait un talent remarquable pour imiter autrui et s'adapter à n'importe quel groupe social, des milieux ruraux les plus simples aux sociétés secrètes les plus prestigieuses. Ami proche du Tremere Dominique Lejeune, Luc figure malheureusement parmi les pertes récentes de la ville de Bordeaux, ayant trouvé la mort lors du dernier raid du Sabbat.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Lucrezia Barcatti</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Anciennement du Sabbat. C'est une Lasombra. Elle est arrivée sur Liège avec son sire au début des années 2000. Elle est devenue Censeur peu après l'affaire Degrelle. Elle vit dans une vieille maison abandonné avec son sire. Ce dernier s'appelle Ozymandias. On le voit très rarement. Elle déteste de Sabbat. Elle est très belle et mignonne mais c'est une guerrière qui n'hésite pas à se battre. Elle perd patience assez vite. Elle n'aime pas tuer des mortels. La technologie c'est carrément pas son truc, même une catastrophe. Elle n'a pas de téléphone portable, juste un vieux combiné à l'ancienne qu'elle a chez elle et dans son bureau dans le refuge des Censeurs. </div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Lyle Kresten</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Connu pour son esprit vif et sa bonne humeur, Lyle est un Tremere aussi bien qui a fait le choix délibéré d’être « fun » — une posture qui déstabilise autant qu’elle rassure. Depuis les années 1990, cependant, il apparaît rarement à l’Élysée ou même en public, un retrait qui a nourri les rumeurs les plus folles au sein de la Cour. La modernisation du clan Tremere dans son ensemble semble être son objectif le plus clair. Lyle a également pour habitude d’accomplir, à quelques années d’intervalle, des actions volontairement scandaleuses afin de rappeler à la Cour qu’il est toujours présent et attentif. L’un de ses derniers exploits notables a consisté à se présenter à l’Élysée habillé en parfait touriste — chemise hawaïenne comprise — en s’extasiant bruyamment sur la beauté de Vienne à cette période de l’année. Depuis cet épisode, on ne l’a presque plus revu.
-<br>Présent lors de l'attaque.</div>
-<div class="box gallery" data-prefix="Lyle" data-count="44"></div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Madeleine d’Aurigny</span>
-<span class="char-meta status-warn">Inactif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Madeleine d’Aurigny est une infante de François Villon, le Roi de Paris et Prince de France. Elle a marqué l'histoire de Liège en tant que Marquise de 1814 à 1915, un titre équivalent à celui de Prince mais signifiant qu'elle agissait comme vassale (et souvent perçue comme une marionnette) de son sire parisien pour consolider l'hégémonie de Paris sur la région. Elle a été évincée du trône en 1915 lors du coup d'État mené par Gosuin. Pour échapper à la Mort Finale, elle a fui la ville avec Tarcisus juste avant le début des hostilités.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Marc Gillard</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Violent et connu pour être problématique, car il a tendance à adhérer aux idéaux du Sabbat, il se tient à l’écart et tente de ne pas faire trop de vagues. Il se rend de temps en temps à l’Élysée et partage ses opinions, approuvant fortement l’autoritarisme et la puissance qui établissent les bonnes règles, tout en respectant globalement les Traditions. Marc n’a pas une approche complexe de la vie, mais son aversion pour tout ce qui est étranger ou différent n’est pas un secret.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Marie Jourdain</span>
-<span class="char-meta status-warn">Inactif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Marie Jourdain était une infante de Robert Degrelle. Décrite comme une personnalité farouche et haineuse envers son sire, elle prétendait que ce dernier avait saboté sa vie mortelle bien avant son Étreinte, laquelle fut marquée par le meurtre de son propre père. Intégrée à la coterie de Fred aux côtés d'autres « ratés » et marginaux, elle semblait tourmentée par sa condition, parlant souvent à des amis imaginaires et rejetant parfois le sang que lui donnait son créateur. Elle est restée tristement célèbre pour avoir assassiné publiquement une goule sétite au sein même de l'Élysée. Bien qu'elle ait été épargnée après cet incident, elle mit ses talents d'infiltratrice au service de ceux qui embauchaient sa coterie. Marie a finalement trouvé la Mort Finale lors du récent raid du Sabbat.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Mentophis</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Mentophis est le sire des deux autres Sétites de la ville et contrôle son réseau par leur intermédiaire. Il a la réputation d'être impitoyable en affaires, mais de bonne compagnie si vous êtes en bons termes avec lui. Si c'est criminel, si c’est de la contrebande, s’il faut revendre, Mentophis est probablement sur le coup (Théodore est l'autre choix, en raison de son passé et ses influences sur le monde criminel). La Descendance sait que depuis leur arrivée en ville et jusqu'à sa promotion, Mentophis et Tarcisus étaient proches.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Mike</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Amical, volontaire et généreux, Mike est accessible et prêt à parler de n’importe quoi à n’importe qui. Mike a perdu son infant et certains de ses amis lors du récent raid du Sabbat, ce qui l’a profondément bouleversé alors qu’il se battait à leurs côtés cette nuit-là.
-<br>Présent lors de l'attaque.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">M’sieur Pierre</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>La voix de M’sieur Pierre est connue de tous, puisqu’il tient le service téléphonique de la hotline Nosferatu. Besoin d’un refuge ? D’une panne d’essence une heure avant l’aube ? D’un corps dont vous devez vous débarrasser ? M’sieur Pierre enverra le Nosferatu adapté à la situation en un temps record. De nombreuses affiches placées à des endroits stratégiques de la ville indiquent le numéro de la ligne d’assistance Nosferatu. La plupart des mortels pensent qu’il s’agit d’une référence cinématographique réalisée par des étudiants, mais les Descendants, même ceux qui ne connaissent pas le service, reconnaissent le symbole du clan Nosferatu et devinent que c’est ainsi que les Nosferatu font la publicité de leurs services.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Natacha</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Ancienne Primogène du clan Gangrel, Natacha a été en 1940 un soutien crucial pour le Prince Gosuin en servant d'yeux et d'oreilles pendant qu'il se cachait durant le putsch de Tarcisus. Elle est particulièrement célèbre pour avoir giflé publiquement Franz Derijk à l'Élysée lors de la présentation de son infante Suzanne Gourand, qu'elle percevait comme une parodie insultante des idéaux féministes. C'est également elle qui a découvert et présenté à la cour le Vénérable, le plus ancien membre de la Descendance de la ville, après son réveil causé par les bombardements de la Seconde Guerre mondiale. Souhaitant abandonner ses responsabilités pour retourner à la vie sauvage, elle a étreint Henri Bowens et Chriss au milieu des années 1980 afin qu'ils prennent sa suite, avant de se retirer de la cour en 1988 et de quitter définitivement la Camarilla en 1999.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Neve Rosetti</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>L'une des plus anciennes Descendants de la ville, Neve est de loin la plus ancienne Ventrue, infante, tout comme Gosuin, de la défunte princesse Hélène. Neve ne s'implique pas directement dans la politique, mais elle conseille Gosuin et passe la plupart de son temps à utiliser son intelligence et ses remarques sarcastiques pour s'amuser à la Cour. C'est elle qui a donné à Thomas son titre de Harpie. En tant que Harpie aînée, elle se trouve dans une situation confortable : prestige, respect et aucune responsabilité dangereuse. Elle avait l'habitude de tourmenter ses victimes en tandem avec Thomas Durieux, Ventrue aussi, mais il a été tué lors du récent raid du Sabbat.
-<br>Présente avant l'attaque, se serait disputée avec Alicia Vandenstree.</div>
-<div class="box gallery" data-prefix="Neve" data-count="3"></div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Paul Gravier</span>
-<span class="char-meta status-warn">Inactif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Paul Gravier était Gangrel étreint en 1993 par un jeune marginal de son clan. Ancien artiste de rue talentueux, il a été choisi pour l'Étreinte en raison de ses dons exceptionnels de conteur, étant capable de captiver et de divertir n'importe quel public. Lors du départ massif des Gangrel de la Camarilla en 1999, Paul a pris la décision singulière de rester à Liège par fidélité envers sa coterie et parce qu'il se considérait comme un vampire résolument urbain. Il officiait comme garde du corps lors de rendez-vous d'affaires délicats. Paul Gravier a malheureusement trouvé la Mort Finale lors du récent raid du Sabbat qui a frappé la ville.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Pieter Scholten</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Pieter semble respecter profondément la vie des mortels et cherche autant que possible à les protéger. Ancien inspecteur de police à Amsterdam, aux Pays-Bas, il enquêtait autrefois sur des affaires de meurtres avant son arrivée ici. Présent dans la ville depuis environ vingt-huit ans, il entretient une certaine proximité avec le shérif Lambert. Il est également ami avec Marie Jourdan et n’a pas semblé particulièrement choqué lorsqu’elle a tué une goule.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Rémi</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Rémi est responsable de tout ce qui peut être reniflé, injecté ou fumé. Il s'occupe des activités d'importation et d'exportation. Grâce au travail acharné de Rémi, les toxicomanes de la ville n'ont jamais été confrontés à un quelconque manque, malgré les efforts du gouvernement pour lutter contre ce fléau.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Robert Degrelle</span>
-<span class="char-meta status-warn">Inactif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Robert Degrelle était un ancien psychanalyste, dont le destin a basculé en 2000, lorsqu'il a été découvert qu'il cachait et facilitait l'installation d'un nid du Sabbat en ville, qui a conduit à la diablerie de l'infante de Laure Nolveaux. Pour cet acte de trahison, Robert a été jugé et exécuté par son propre frère de sang, Lambert.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Sandrine Leroy</span>
-<span class="char-meta status-warn">Inactif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Sandrine Leroy était l'infante de Laure Nolveaux, l’actuelle Gardienne de l’Élysée. Durant l'Occupation, alors qu'elle était encore jeune nouveau-née, elle devint l'amante de Tania, une résistante locale étreinte illégalement chez les Brujah. Elle fut l'un des membres actifs du Club des Femmes Immortelles dès sa fondation par Tania en 1965, y restant impliquée jusqu'à sa mort. Sandrine a trouvé la Mort Finale en 2000, victime d'une diablerie perpétrée par un Lasombra membre du Sabbat. Laure a découvert ses restes — vêtements, cendres et ossements — ainsi que son téléphone dans des buissons après avoir ressenti une douleur spirituelle insoutenable. Son meurtre a conduit à l'exécution du Malkavien Robert Degrelle, coupable d'avoir dissimulé le nid du Sabbat responsable de l'attaque.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Scoop</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Le mauvais goût, les rumeurs et le journalisme jaune dans la Cour de la Descendance ont un nom : Scoop. Cru et obscène, il n’a jamais tenu plus d’un mois dans un journal donné, ce qui explique pourquoi le clan l’a accueilli. Si l’on peut supporter son humour dégueulasse et son langage grossier, certaines rumeurs, bonnes ou mauvaises, peuvent être échangées, et les scoops les plus scandaleux ne sont pas toujours les moins vraisemblables.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Suzanne Gourand</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Suzanne est l’infante de Franz, choisie pour être la parodie en chair et en os du mouvement féministe des années 1960. Franz a choisi Suzanne car elle était, de fait, « égale aux hommes » : ouvrière d’usine, buvant de la bière, récitant son alphabet en rotant et parlant avec ses poings. Lorsqu’elle tenta de défendre le féminisme, la cause à laquelle elle croyait, cela se retourna contre elle par manque d'éloquence — exactement comme l’avait prévu Franz. Suzanne a repris le Club des femmes immortelles après que Tania ait été tuée lors du récent raid du Sabbat.
-<br>Présente lors de l'attaque.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Tania</span>
-<span class="char-meta status-warn">Inactif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Tania a été étreinte illégalement durant la Seconde Guerre mondiale. Avant et après son étreinte, elle fut une résistante locale active durant l'Occupation allemande. En 1965, elle a fondé le Club des Femmes Immortelles afin de lutter contre la misogynie active et passive d'une société vampirique féodale et conservatrice. Tania était une amie très proche du Primogène Brujah, Théodore Jacob, qui voyait en elle l'incarnation des idéaux de son clan. Elle était également l'une des rares membres du Club de La Main Morte. Elle a trouvé la Mort Finale durant le récent raid du Sabbat. Sa disparition a laissé un grand vide pour toute la ville.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Tarcisus</span>
-<span class="char-meta status-warn">Inactif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Tarcisus est surtout célèbre pour son coup d'État de 1939, durant lequel il profite du chaos de la Seconde Guerre mondiale et du soutien de Vienne pour s'emparer de la Praxis et régner en tyran sur la cité. Décrit comme un chercheur et un thaumaturge d'une grande intelligence, il a néanmoins mené un régime de terreur marqué par des exécutions fréquentes et une collaboration étroite avec les forces d'occupation pour asseoir son autorité. Après l'échec de la consolidation de son pouvoir à la Libération, il est « promu » au rang de Lord par son clan et quitte Liège pour un domaine situé plus à l'Est, laissant sa place de Régent et de Primogène à son infant Lyle Kersten.</div>
-<div class="box gallery" data-prefix="Tarcisus" data-count="3"></div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Térence</span>
-<span class="char-meta status-warn">Inactif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Térence était un membre de la coterie de Fred aux côtés d'autres marginaux et nouveau-nés. Il occupait le rôle de mécanicien pour la Descendance liégeoise, étant le contact privilégié pour toute réparation ou préparation de véhicule. Très lié aux punks sans-abri de la ville avec lesquels il échangeait régulièrement des rumeurs, il se montrait particulièrement protecteur envers eux. Térence a malheureusement trouvé la Mort Finale lors du récent raid du Sabbat.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Théodore Grignoux</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Primogène et le plus vieux Brujah en ville, Théodore est toujours prêt à discuter, même avec des nouveau-nés. Théodore exerce une influence sur la plupart des journaux, et sa participation contribue activement au maintien de la Mascarade. C’est également un Brujah très expressif et franc, dont les mots sont généralement suivis d’actions. Alors que Théodore est généralement perçu comme un vampire lucide et terre-à-terre, son soutien au prince Gosuin est souvent accusé d’être guidé par une amitié jugée — à tort ou à raison — inconditionnelle. Théodore est également connu pour être très défensif à l’égard de son domaine, l’un des plus vastes domaines personnels de la ville. Il a tué un intrus Tremere durant les mouvements révolutionnaires de 1830. Théodore a appelé publiquement à de nouvelles Étreintes et à l'accueil de nouveaux arrivants pour compenser les pertes subies, au mépris de la troisième Tradition.
-<br>Présent lors de l'attaque.</div>
-<div class="box gallery" data-prefix="Theodore" data-count="6"></div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Thomas Durieux</span>
-<span class="char-meta status-warn">Inactif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Dans sa vie mortelle, Thomas Durieux était un étudiant en droit brillant, spécialisé en diplomatie internationale, avant d’être Étreint en 1908 par Christophe de Bri-Levêque. Il est resté célèbre pour son appartenance à la coterie des « Fleurs de la Belle Époque », au sein de laquelle il était le confident et l’ami très proche de Claudia Vonïgner, Laure Nolveaux et Jérôme Lehin. Nommé Harpie dans les années 1950, il formait avec Neve Rosetti un duo redoutable à l’Élysée, excellant dans l’art de la joute verbale et de l’humiliation sociale. Il trouva la Mort Finale durant le récent raid du Sabbat contre l'Élysée.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Tristan van Roy</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Tristan est un habitué des Elysiums arrivé à Liège vers 2000, qui traîne l'oreille là où ça jase. Il travaille comme coursier efficace, se fait payer en sang de vampire, sait voler et dispose de plusieurs véhicules. Protecteur avec ses proches mais foncièrement lâche face au conflit, il a perdu Thomas Durieux lors du raid du Sabbat.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Urbain Delacour</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Urbain a toujours été un homme renfermé, depuis son arrivée de Paris dans les années 1910. Très peu le connaissent réellement au-delà de son statut de sire d’Alicia et d’artiste raté — peintre, du moins d’après les quelques expositions de galerie qu’il a données entre les années 1950 et 1960, dans un style fauviste aujourd’hui largement oublié. Urbain est avant tout un solitaire : il travaille seul et, depuis les années 1960, n’a plus rien montré à personne. Les ragots à son sujet persistent. On murmure qu’il n’a pas eu l’intelligence de se renseigner sur Alicia avant de la choisir, découvrant trop tard que le roman qui l’avait fasciné n’était pas le sien mais celui de Grégory. Le scandale ne s’est pas arrêté là : lors de son propre vernissage, Urbain a été expulsé, au bord de la frénésie, après qu’Alicia a publiquement insulté ses œuvres, scellant définitivement sa disgrâce.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Victor de Sainte-Croix</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Le Primogène Malkavien Victor dégage classe, élégance et bonnes manières. Il a été Étreint pendant la Première Guerre mondiale. Doté d’une bonne diction et d’un esprit vif, Victor se fond généralement bien dans l’Élysée, même s’il a ses moments de discours passionnés et débridés.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Walter</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Walter était un Brujah d'origine britannique, qui s'est illustré comme espion et résistant pendant la Seconde Guerre mondiale. Disposant d'influences importantes dans des secteurs clés, il a malheureusement trouvé la mort lors du récent raid du Sabbat alors qu'il se trouvait à l'Élysée.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Xavier</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Patriarche du clan, Xavier est un être social qui a été à la fois un très bon shérif et un excellent Primogène jusqu’à ce qu’il prenne sa « retraite ». Il est resté actif et impliqué dans la politique ainsi que dans la vie mondaine des vampires. Il est souvent sollicité pour parler d’art et de religion. Pour la Cour, Xavier est le protecteur des autres Malkaviens, qui sont ses chers et uniques infants. Il a pris sa retraite de ses fonctions de Primogène et de Prévôt, mais la plupart viennent encore le voir à la place de Victor pour résoudre certaines questions délicates.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Vénérable</span>
-<span class="char-meta status-good">Actif</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Sans doute le plus ancien des Descendants de la ville, le Vénérable reste seul et entretient peu de contacts avec les non-Gangrel. Il ne chasse pas les visiteurs s’ils le trouvent, mais ne recherche pas ouvertement leur présence. Étreint pendant l’Âge des Ténèbres, le Vénérable est resté longtemps en torpeur jusqu’à ce qu’il se réveille à la suite des bombardements de la Seconde Guerre mondiale.</div>
-</details>
-
-<details class="character">
-<summary>
-<span class="char-name">Groupes</span>
-<span class="char-meta status-alert">ERROR</span>
-<span class="arrow">▶</span>
-</summary>
-<div class="box"><strong>Note Interne :</strong><br>Images de groupes</div>
-<div class="box gallery" data-prefix="Group" data-count="25"></div>
-</details>
-
-<!-- Lightbox overlay -->
-<div id="lightboxOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; justify-content:center; align-items:center; flex-direction:column;">
+  <h2>Descendants</h2>
+  <div style="width:100%;height:600px;border:1px solid #0f8">
+    <iframe src="https://embed.kumu.io/130b401cf6efe888b913567541e9bbe8" width="100%" height="100%" frameborder="0" style="border:0"></iframe>
+  </div>
+  <br>
+
+  <details><summary><span>Adriano Guicciardini</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Homme de goût et d'un certain mystère, Adriano est un poseur, connu pour son implication dans le monde de la finance. Il est arrivé en ville à la fin du XIXᵉ siècle pour informer la communauté que sa dame avait rencontré sa Mort Finale en Italie. Un test sanguin a prouvé qu'il était bien son infant et qu'il ne l'avait pas diablerisée. Adriano s'est fait l'ennemi du Prince Gosuin lorsqu'il a racheté les parts d'une société importante qui était aux mains de Giovanni. Mais tout est permis dans le monde de la finance, et Gosuin ne pouvait tout simplement pas égaler l'énorme somme nécessaire à l'achat de ce qu'il convoitait.<br><br>
+  <div class="box gallery" data-prefix="Adriano" data-count="8"></div></div></details>
+
+  <details><summary><span>Aleister Spencer</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Aleister Spencer est une goule au service du clan Tremere qui occupe actuellement la fonction de gardien de la bibliothèque de la Fondation.</div></details>
+
+  <details><summary><span>Alicia Vandenstree</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Actrice extraordinaire à la fin des années 1940, Alicia s'est imposée comme l'une des harpies les plus acérées de la ville, se forgeant un nom par elle-même, à coups d'esprit, de présence et de cruauté parfaitement dosée.<br><br>
+  Présente le 10/02 à l'Elyseum (Opéra). Se moque de Fred et de son apparence. Interrogée, elle indique que le soir de l'attaque la discussion tendue entre elle et Neve était qu'Alicia la trouvait trop conservatrice, trop gentille dans son rôle de Harpie avec son duo Thomas Durieux.<br><br>
+  <div class="box gallery" data-prefix="Alicia" data-count="6"></div></div></details>
+
+  <details><summary><span>Alterec</span><span class="char-meta status-warn">Inactif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Childéric, puis Alterec, et enfin Clotilde, ont été les princes et princesses médiévales de la ville d'avant l'an 1000 de notre ère jusqu'au XVe siècle. Ils sont morts dans des circonstances perdues pour l'histoire.</div></details>
+
+  <details><summary><span>Annabelle Vicomte</span><span class="char-meta status-warn">Inactif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Annabelle Vicomte était une musicienne talentueuse étreinte en 1938 par son amant Jérôme Lehin. Reconnue pour sa voix pure et sa maîtrise de la harpe, elle entretenait avec son sire une relation amoureuse sincère. Elle a été tuée pendant le raid du Sabbat, au grand dam de tout le clan Toréador.<br><br>
+  Laure Nolveaux aurait un doute sur sa vraie Mort Finale : cendres différentes de celles qu'elle a déjà pu voir ? Il manquerait ses sous-vêtements, ainsi que des bijoux, dont un collier offert par Laure. Elle était avec Lambert quand elle est morte.</div></details>
+
+  <details><summary><span>Armand Colin</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Armand est agréable à côtoyer pour la plupart des gens. Son influence sur les cercles du droit et de la bureaucratie n'est un secret pour personne. Non présent lors de l'attaque.</div></details>
+
+  <details><summary><span>Carcasse</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Carcasse était un bibliothécaire passionné par l'apprivoisement et le dressage de certains animaux. Il parlait toujours d'un ton bas et monotone et est connu pour être la personne qui tient les registres de l'histoire étrange de la ville. C'est la personne à rencontrer pour obtenir des détails sur des événements historiques spécifiques touchant le surnaturel. Difficile à trouver, le seul moyen de contacter Carcasse de manière fiable est la ligne téléphonique de M'sieur Pierre lorsqu'il s'agit de traiter des informations banales ; M'sieur Pierre organise alors la rencontre entre Carcasse et les Descendants ou la goule qui requiert ses talents.</div></details>
+
+  <details><summary><span>Caterina Giovanni</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Caterina Giovanni était autrefois une goule, étreinte par son maître juste avant que celui-ci ne soit contraint de quitter la ville. Depuis, elle est pourchassée par les Sétites, parfois de manière ouverte, parfois plus insidieuse. Elle a néanmoins réussi à survivre grâce au soutien du Club des Femmes Immortelles. Depuis la mort de leur cheffe, Tania, il ne lui reste plus que Suzanne Gourand — à peine plus âgée qu'elle — pour assurer sa protection. Par le passé, Caterina et son clan exerçaient un contrôle important sur les travailleurs et travailleuses du sexe. Cette domination a pris fin lorsque l'influence de Gosuin, doublée de sa haine farouche des Giovanni, a conduit au « nettoyage » complet des quais, désormais transformés en attraction touristique familiale. Malgré tout, Caterina a su préserver un réseau d'escortes solide : plus restreint qu'autrefois, mais bien plus rentable, composé de clients réguliers et fortunés. Caterina fait avant tout de son mieux pour survivre. Les Sétites seraient impitoyables s'ils la trouvaient sans protection hors de l'Élysée. Elle dépend fortement de ses goules et de son réseau de prostitution, qui constitue sa principale source de revenus — ou du moins la seule connue.<br><br>
+  Non présente lors de l'attaque, avait organisé une contre soirée le même soir, avec Karl Nassau.<br><br>
+  <div class="box gallery" data-prefix="Catherina" data-count="3"></div></div></details>
+
+  <details><summary><span>Camille Simonis</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Camille est un Tremere qui se fait discret, même s'il a l'air de bien connaître la Cour de Liège. Etreint il y a une dizaine d'années, il n'est apparu pour de bon dans la société vampirique qu'au début des années 2000. Proche de Lyle, il l'est peut-être aussi de la discrète Claudia et semble plutôt rester entre Tremere. Il ne cache pas son intérêt pour la technologie même s'il semble suivre les traditions à la lettre. Il est devenu Censeur auprès du Consortium en 2005, assez rapidement pour un vampire aussi jeune.</div></details>
+
+  <details><summary><span>Céline</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Céline est la goule personnelle du Prince Gosuin et occupe la fonction de Sénéchal de Liège. Parfaite et fidèle secrétaire, elle est chargée de gérer l'agenda du Prince, d'organiser les réunions et de surveiller l'application des édits ainsi que les limites du domaine. Son influence se manifeste également lors des nuits d'Élysée, où elle assure le filtrage des entrées pour les pièces réservées aux membres de la Descendance.</div></details>
+
+  <details><summary><span>Charogne</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Un peu brusque et introverti, Charogne a été Étreint pour sa polyvalence, possédant de nombreuses compétences dans tous les domaines manuels. Déplacer des meubles, transporter des corps, transformer une scène de meurtre en suicide, réparer une voiture une heure avant l'aube… Charogne peut tout faire et entretenir des relations quelque peu cordiales avec quiconque a besoin de ses services. Iel est bien élevé, mais, comme tout travailleur manuel, peu de personnes se souviennent des détails identifiables.</div></details>
+
+  <details><summary><span>Chriss</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Chriss est connu pour avoir approché les loups-garous à la fin des années 1980 afin de conclure un traité de non-agression. Cette démarche a été couronnée de succès : depuis lors, loups-garous et vampires ne se sont pas affrontés ouvertement.<br><br>
+  Présent lors de l'attaque, a été blessé.</div></details>
+
+  <details><summary><span>Christophe de Bri-Leveque</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Surtout connu pour avoir été témoin de la mort de son sire, dévoré par un loup-garou dans les années 1950, il est un homme sociable, capable de tenir une conversation agréable sur à peu près n'importe quel sujet. Il est souvent invité à des fêtes pour sa charmante compagnie.<br><br>
+  <div class="box gallery" data-prefix="Christophe" data-count="2"></div></div></details>
+
+  <details><summary><span>Childéric</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Childéric, puis Alterec, et enfin Clotilde, ont été les princes et princesses médiévales de la ville d'avant l'an 1000 de notre ère jusqu'au XVe siècle. Ils sont morts dans des circonstances perdues pour l'histoire.</div></details>
+
+  <details><summary><span>Clotilde</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Childéric, puis Alterec, et enfin Clotilde, ont été les princes et princesses médiévales de la ville d'avant l'an 1000 de notre ère jusqu'au XVe siècle. Ils sont morts dans des circonstances perdues pour l'histoire.</div></details>
+
+  <details><summary><span>Claudia Vonïgner</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Apprentie la mieux classée après Mikaël, Claudia reste distante de la Fondation. C'est une jeune femme discrète qui est souvent ignorée. Elle est la seule membre de sa coterie à ne pas s'être élevée à un rang d'importance au sein des Descendants.<br><br>
+  <div class="box gallery" data-prefix="Claudia" data-count="16"></div></div></details>
+
+  <details><summary><span>Docteur</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Docteur est le Primogène du clan Nosferatu. Véritable puits de connaissances, Docteur est un homme mystérieux dont personne hors du clan ne connaît le réel nom. À l'Élysée, il choisit de porter les vêtements du théâtre, donnant l'impression qu'il est un acteur en costume et portant un masque blanc pour cacher ses traits incompatibles avec la Mascarade. Il est réservé, mais lorsqu'on lui parle, on peut entendre et converser avec le Primogène compétent, éduqué et posé qu'il est.<br><br>
+  Présent avant l'attaque au moins. Présent le 10/02 à l'Elyseum (Opéra), pour parler au Prince du mortel que son clan souhaite étreindre. Mike lui parle de ses inquiétudes concernant des entrepôts d'armes mais sans preuve il indique qu'il ne peut rien y faire. Raconte que le soir de l'attaque a combattu un Lassombra et à vu Terrence et Luc tomber.</div></details>
+
+  <details><summary><span>Dominique Lejeune</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Malgré sa mauvaise réputation, Dominique est un Tremere bien élevé, avec un indéniable air de premier de la classe. Parfaitement sage à l'Élysée, il se montre accessible et sympathique, en particulier avec les plus jeunes, qui trouvent souvent plus de points communs avec lui qu'avec leurs aînés du Clan. Il traîne cependant une réputation tenace : Dominique semble toujours s'entourer des mauvaises personnes. La plupart de ses anciennes connaissances ont fini mortes ou victimes d'une chasse au sang, et son amitié notoire avec les Sétites n'arrange rien à sa crédibilité. Il a formé une coterie avec les deux plus jeunes Sétites de la ville, au grand dam de nombreux membres de la Descendance. Cette association sulfureuse suffit à susciter la méfiance à son égard, même en l'absence de preuves concrètes de trahison.</div></details>
+
+  <details><summary><span>Emilio</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Emilio, l'aîné des infants de Mentophis, contrôle tout ce qui a trait à la prostitution et au trafic d'êtres vivants. Plus sociable que son frère, Emilio se rend parfois à l'Élysée avec son Sire pour essayer d'obtenir un peu d'influence et de ragots, mais jusqu'à présent, personne n'a vraiment accepté de soutenir les Sétites aussi ouvertement et d'utiliser leurs services (ou du moins l'assumer). Les Nosferatus sont moins chers et ce sont des Camaristes. Pourtant, Emilio est la personne à contacter pour faire disparaître un corps si l'on ne veut pas avoir affaire aux faveurs des Nosferatu, et les rumeurs disent qu'il y a des accords entre lui et les Nosferatu pour travailler sur des entreprises de recyclage de corps.</div></details>
+
+  <details><summary><span>Eric Artevelt</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Lointain et discret, Éric est souvent oublié, ne se distinguant pas particulièrement. En tant que Ventrue, il a su conserver de solides liens avec de nombreuses autres villes. À ce titre, il voyage fréquemment à l'étranger, avec la bénédiction de Gosuin, afin de défendre les intérêts du clan liégeois. Il est également reconnu pour sa maîtrise de plusieurs langues, notamment l'anglais, le néerlandais et l'allemand.</div></details>
+
+  <details><summary><span>François Villon</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">François Villon est le Roi de Paris et Prince de toute la France. Il a tenté de s'emparer de Liège et d'autres villes à l'ouest du Rhin dans le sillage de Napoléon.</div></details>
+
+  <details><summary><span>Fred</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Reconnu dans les années 1990, Fred est le plus jeune membre du clan des Malkaviens. Il a été Étreint aux côtés de Marie Jourdan par Robert Degrelle, le second infant de Xavier (exécuté par Prévôt pour avoir caché des Sabbatiques). Marie a été tuée lors du récent raid du Sabbat, avec tous les autres membres de leur coterie, laissant Fred seul.<br><br>
+  Présent lors de l'attaque.<br><br>
+  Présent le 10/02 à l'Elyseum (Opéra). Victime d'Alicia, semble perdu et seul. Est invité par Lucrezia chez elle.<br><br>
+  <div class="box gallery" data-prefix="Fred" data-count="2"></div></div></details>
+
+  <details><summary><span>Franz Derijk</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Ses influences sont restées cantonnées aux cercles universitaires. Franz a tendance à se renfermer sur lui-même, mais sa haine des Tremere, née de leur coup d'État durant la Seconde Guerre mondiale, n'est un secret pour personne. Son conservatisme et son attitude à l'égard des femmes — souhaitant qu'elles retrouvent le rôle que Dieu leur a réservé — ont provoqué de nombreux conflits avec ses pairs, allant jusqu'à une gifle publique.</div></details>
+
+  <details><summary><span>Grégory Darvault</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Le Primogène Toréador est un romancier sympathique, accessible et élégant. La plupart des gens ne pensent pas grand-chose de Grégory, mais ils s'accordent tous à dire qu'il a du talent pour s'exprimer et créer des personnages profonds et convaincants. Il ne s'implique dans rien qui dépasse ses influences et son pouvoir personnel et, en tant que tel, n'est généralement pas considéré comme un danger sur le plan politique. Le raid du Sabbat lui a coûté sa petite-infante, Annabelle, et la rumeur court que sa Bête a pris le dessus pendant l'attaque, le poussant à fuir lâchement.<br><br>
+  Présent lors de l'attaque.<br><br>
+  <div class="box gallery" data-prefix="Gregory" data-count="2"></div></div></details>
+
+  <details><summary><span>Hélène de Chantraine</span><span class="char-meta status-warn">Inactif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Ancienne Princesse de Liège de 1453 à 1793, il s'agit de celle qui fit intégrer la ville à la Camarilla nouvellement formée. Elle connaîtra la mort finale aux mains d'Anarques pendant la seconde restauration autrichienne.</div></details>
+
+  <details><summary><span>Henri Bowens</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Henri fréquente souvent les Primogènes Toréador et Malkavien. Il est le Primogène « de Cour » pour son clan : il se comporte avec bonnes manières, réfléchit ses décisions et est généralement respecté par la Cour, bien qu'il soit le plus jeune des Primogènes.</div></details>
+
+  <details><summary><span>Heudebert</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Heudebert a disparu de Liège en l'an 2000, juste au moment où la trahison de Degrelle (qui cachait un nid du Sabbat) a été découverte.</div></details>
+
+  <details><summary><span>Igor</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Un Nosferatu vraiment curieux et optimiste, Igor est un joyeux petit luron. La plupart des gens sourient lorsqu'ils parlent de lui, tant il respire le bonheur. C'est un Nosferatu animé par la curiosité, l'occultisme et tout ce qu'il trouve bizarre et intéressant.</div></details>
+
+  <details><summary><span>Jean Gosuin</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Le prince de la ville, Gosuin, a pris le pouvoir pendant la Première Guerre mondiale après un coup d'État contre la marquise Toréador. Connu comme un commerçant bourgeois, dans le domaine des armes, Gosuin était un orateur et un homme politique pendant la Révolution liégeoise. Il est étreint et fonde une coterie avec Théodore et Lambert. Gosuin est un homme calme et posé qui croit qu'il faut gouverner en ayant des « subordonnés consentants » au lieu de s'imposer par la force, selon les écrits de La Boétie.<br><br>
+  Présent lors de l'attaque, voulait parler au Primogénat.<br><br>
+  D'après Lyle, se serait battu contre un Tzimisce pendant l'attaque.
+  Présent le 10/02 à l'Elyseum (Opéra), plus agité que d'habitude. Trouve que le Primogénat abuse de son pouvoir et souhaite resserrer la vis. Pour lui la réunion sur l'étreinte pour chaque clan s'est révélée infructueuse dès le départ, à l'inverse de ce qu'à dit Lyle. Concernant le cas de la frénésie de Marc Gillard il demande à Pieter sa préférence de sentense et va contacter le primogène Brujah pour gérer l'affaire.<br><br>
+  <div class="box gallery" data-prefix="Gosuin" data-count="2"></div></div></details>
+
+  <details><summary><span>Jean-Pierre Griffin</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Griffin est la harpie Tremere, mais contrairement à la plupart des harpies, il va droit au but. Il n'a rien de sympathique et enterre six pieds sous terre la réputation sociale de quiconque, quel que soit son statut ou sa position, pour tout comportement incorrect à l'Élysée. Il est aussi aimable qu'un gardien de prison, incarnant la harpie taciturne par excellence. En tant que harpie, il traque et répertorie les faveurs de chacun, s'assurant que les dettes soient correctement remboursées.<br><br>
+  Présent lors de l'attaque.<br><br>
+  <div class="box gallery" data-prefix="Griffin" data-count="5"></div></div></details>
+
+  <details><summary><span>Jérôme Lehin</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Calme et gentil, Jérôme est l'infant de Grégory. Il a formé une coterie avec la très talentueuse et féroce Laure, ainsi qu'avec la Tremere Claudia. Malgré qu'il soit devenu Mandataire de son clan, très peu de gens le connaissent réellement. La mort d'Annabelle, son infante et amante, a fait de Jérôme un reclus. Avant cela, son agenda consistait principalement à créer les meilleurs événements possibles pour son clan, qu'il s'agisse de vernissages ou de grandes soirées mondaines.<br><br>
+  Non présent lors de l'attaque.</div></details>
+
+  <details><summary><span>Karl Nassau</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Par l'intermédiaire de ses goules, Karl possède certains des plus grands clubs de la ville et de la banlieue, ce qui lui confère un certain prestige, ainsi qu'un contrôle notable sur les télévisions et les radios locales. De nature décontractée, Karl est souvent perçu comme quelqu'un qui ne s'occupe que de ses propres affaires. L'une de ses goules dirige l'un des clubs les plus populaires de la ville, ayant acquis le statut d'Élysée : Les Champs Élysées.<br>Non présent lors de l'attaque, avait organisé une contre soirée le même soir, avec Caterina Giovanni.</div></details>
+
+  <details><summary><span>Lambert</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Lambert est un homme assez discret, avec des tendances au TOC : il lève parfois les bras ou fait ses lacets dans les pires moments possibles. Il reste un shérif respecté et compétent, capable d'engager un combat contre un Brujah avec une bonne chance de s'en sortir. C'est le genre d'homme avec lequel on ne traite que lorsqu'il le faut. Lambert est patriote et se soucie peu des idéologies de la Camarilla. Sa rage contre le Sabbat l'a poussé à détruire son propre frère de sang, Robert Degrelle, pour avoir couvert un nid du Sabbat qui entraîna la mort de l'infant de Laure Nolveaux.<br><br>
+  A raconté l'attaque de son point de vue, était avec Annabelle Vicomte à l'arrière de l'Opéra. Pour lui Marc Gillard pourrait être impliqué. Enquête en cours de son côté, échanges d'informations à faire. Info de M'sieur Pierre : aurait nettoyé la morgue d'où les nouveau-nés du Sabbat viendraient. P a son numéro.</div></details>
+
+  <details><summary><span>Laure Nolveaux</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Orfèvre et joaillière de talent, Laure est un véritable prodige de l'esthétique et des astuces de marketing brillantes. Dans les années 1950, Gosuin lui accorde le titre prestigieux de Gardienne de l'Élysée. Sa force de caractère l'a également maintenue en vie à travers les tragédies : elle a perdu son infante et enfant à cause d'un diaboliste Lasombra, qu'elle a traqué aux côtés de Lambert, une chasse qui a mené à l'exécution de Robert Degrelle. La récente attaque lui a coûté une autre amie proche.<br><br>
+  Présente lors de l'attaque. A des doutes sur la Mort Finale d'Annabelle même si d'après ses dires elle fait confiance à Lambert. Souhaite rester anonyme dans son témoignage. Thomas Durieux est mort sous ses yeux, elle l'a vengé.
+  <div class="box gallery" data-prefix="Laure" data-count="4"></div></div></details>
+
+  <details><summary><span>Léon</span><span class="char-meta status-warn">Inactif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Léon était un sang-clair intégré aux Paumés. Il effectuait des patrouilles lors de missions de surveillance délicates. Léon a malheureusement trouvé la Mort Finale lors du récent raid du Sabbat.</div></details>
+
+  <details><summary><span>Luc</span><span class="char-meta status-warn">Inactif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Luc, également connu sous le nom de Lucien lorsqu'il fréquentait la haute société, était un membre du clan Nosferatu grand acteur, qui possédait un talent remarquable pour imiter autrui et s'adapter à n'importe quel groupe social, des milieux ruraux les plus simples aux sociétés secrètes les plus prestigieuses. Ami proche du Tremere Dominique Lejeune, Luc figure malheureusement parmi les pertes récentes de la ville de Liège, ayant trouvé la mort lors du dernier raid du Sabbat.</div></details>
+
+  <details><summary><span>Lucrezia Barcatti</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Anciennement du Sabbat. C'est une Lasombra. Elle est arrivée sur Liège avec son sire au début des années 2000. Elle est devenue Censeur peu après l'affaire Degrelle. Elle vit dans une vieille maison abandonnée avec son sire, Ozymandias, qu'on voit très rarement. Elle déteste le Sabbat. Elle est très belle et mignonne mais c'est une guerrière qui n'hésite pas à se battre. Elle perd patience assez vite. Elle n'aime pas tuer des mortels. La technologie c'est carrément pas son truc, même une catastrophe. Elle n'a pas de téléphone portable, juste un vieux combiné à l'ancienne chez elle et dans son bureau dans le refuge des Censeurs.</div></details>
+
+  <details><summary><span>Lyle Kresten</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Connu pour son esprit vif et sa bonne humeur, Lyle est un Tremere qui a fait le choix délibéré d'être « fun » — une posture qui déstabilise autant qu'elle rassure. Depuis les années 1990, cependant, il apparaît rarement à l'Élysée ou même en public, un retrait qui a nourri les rumeurs les plus folles au sein de la Cour. La modernisation du clan Tremere dans son ensemble semble être son objectif le plus clair. Lyle a également pour habitude d'accomplir, à quelques années d'intervalle, des actions volontairement scandaleuses afin de rappeler à la Cour qu'il est toujours présent et attentif. L'un de ses derniers exploits notables a consisté à se présenter à l'Élysée habillé en parfait touriste — chemise hawaïenne comprise — en s'extasiant bruyamment sur la beauté de Vienne à cette période de l'année. Depuis cet épisode, on ne l'a presque plus revu.<br><br>
+  Présent lors de l'attaque. Rencontré le 10/02 à la Chantrie, indique que la convocation du Prince était liée aux droits d'étreinte. Le Primogénat était plutôt d'accord pour 1 descendant par clan (exception fait des malkaviens). Indique que Gosuin était plutôt d'accord pour ça mais que depuis l'attaque il semble avoir changé d'avis.<br><br>
+  <div class="box gallery" data-prefix="Lyle" data-count="44"></div></div></details>
+
+  <details><summary><span>Madeleine d'Aurigny</span><span class="char-meta status-warn">Inactif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Madeleine d'Aurigny est une infante de François Villon, le Roi de Paris et Prince de France. Elle a marqué l'histoire de Liège en tant que Marquise de 1814 à 1915, un titre équivalent à celui de Prince mais signifiant qu'elle agissait comme vassale (et souvent perçue comme une marionnette) de son sire parisien pour consolider l'hégémonie de Paris sur la région. Elle a été évincée du trône en 1915 lors du coup d'État mené par Gosuin. Pour échapper à la Mort Finale, elle a fui la ville avec Tarcisus juste avant le début des hostilités.</div></details>
+
+  <details><summary><span>Marc Gillard</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Violent et connu pour être problématique, car il a tendance à adhérer aux idéaux du Sabbat, il se tient à l'écart et tente de ne pas faire trop de vagues. Il se rend de temps en temps à l'Élysée et partage ses opinions, approuvant fortement l'autoritarisme et la puissance qui établissent les bonnes règles, tout en respectant globalement les Traditions. Marc n'a pas une approche complexe de la vie, mais son aversion pour tout ce qui est étranger ou différent n'est pas un secret.<br><br>
+  Présent le 10/02 à l'Elyseum (Opéra). Ne semble pas avoir d'alibi pour le soir de l'attaque, était aux quais Est. Est rentré en frénésie suite aux questions de Pieter, en attente de jugement (peine souhaitée par Pieter : 2 ans de lien du sang complet avec lui). A déjà été coupable de frénésie en Elyseum face à Aurélien Gustave, en 1947 (avec pour sentence un lien de sang).</div></details>
+
+  <details><summary><span>Marie Jourdain</span><span class="char-meta status-warn">Inactif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Marie Jourdain était une infante de Robert Degrelle. Décrite comme une personnalité farouche et haineuse envers son sire, elle prétendait que ce dernier avait saboté sa vie mortelle bien avant son Étreinte, laquelle fut marquée par le meurtre de son propre père. Intégrée à la coterie de Fred aux côtés d'autres « ratés » et marginaux, elle semblait tourmentée par sa condition, parlant souvent à des amis imaginaires et rejetant parfois le sang que lui donnait son créateur. Elle est restée tristement célèbre pour avoir assassiné publiquement une goule sétite au sein même de l'Élysée. Bien qu'elle ait été épargnée après cet incident, elle mit ses talents d'infiltratrice au service de ceux qui embauchaient sa coterie. Marie a finalement trouvé la Mort Finale lors du récent raid du Sabbat.</div></details>
+
+  <details><summary><span>Mentophis</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Mentophis est le sire des deux autres Sétites de la ville et contrôle son réseau par leur intermédiaire. Il a la réputation d'être impitoyable en affaires, mais de bonne compagnie si vous êtes en bons termes avec lui. Si c'est criminel, si c'est de la contrebande, s'il faut revendre, Mentophis est probablement sur le coup (Théodore est l'autre choix, en raison de son passé et ses influences sur le monde criminel). La Descendance sait que depuis leur arrivée en ville et jusqu'à sa promotion, Mentophis et Tarcisus étaient proches.</div></details>
+
+  <details><summary><span>Mikaël Hörsman</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Mikaël Hörsman, l’apprenti le plus haut placé de la ville, travaille dur et tout le monde le sait. Tremere très intelligent et profondément dévoué à la Pyramide, il apprécie le spectacle qu’offre la Cour d’Élysée mais ne s’y implique jamais directement. Ses influences se répartissent principalement entre les universités, les groupes de recherche, certaines églises et divers cercles occultes. Ouvert à la discussion sur à peu près tous les sujets, Mikaël a maintes fois démontré son intelligence lors de débats oraux, notamment en expliquant et en contextualisant des citations d’auteurs classiques.<br><br>
+  Présent lors de l'attaque.</div></details>
   
-  <img id="lightboxImage" style="max-width:90%; max-height:80%; object-fit:contain;">
-  
-  <!-- Caption -->
-  <div id="lightboxCaption" style="margin-top:15px; color:#0f8; font-style:italic; text-align:center; max-width:80%; display:none;"></div>
+  <details><summary><span>Mike</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Amical, volontaire et généreux, Mike est accessible et prêt à parler de n'importe quoi à n'importe qui. Mike a perdu son infant et certains de ses amis lors du récent raid du Sabbat, ce qui l'a profondément bouleversé alors qu'il se battait à leurs côtés cette nuit-là.<br><br>
+  Présent lors de l'attaque.<br><br>
+  Présent le 10/02 à l'Elyseum (Opéra). Parle avec le Docteur, pour le convaincre de parler au prince d'entrepôts d'armes, précédemment au Prince mais récupérés par les Giovannis puis par Adriano Guicciardini. D'après lui Walter enquêtait dessus avant sa Mort Finale à l'Elyseum car des rumeurs sont présentes sur une attaque, liée à ces armes.</div></details>
 
-</div>
+  <details><summary><span>M'sieur Pierre</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">La voix de M'sieur Pierre est connue de tous, puisqu'il tient le service téléphonique de la hotline Nosferatu. Besoin d'un refuge ? D'une panne d'essence une heure avant l'aube ? D'un corps dont vous devez vous débarrasser ? M'sieur Pierre enverra le Nosferatu adapté à la situation en un temps record. De nombreuses affiches placées à des endroits stratégiques de la ville indiquent le numéro de la ligne d'assistance Nosferatu. La plupart des mortels pensent qu'il s'agit d'une référence cinématographique réalisée par des étudiants, mais les Descendants, même ceux qui ne connaissent pas le service, reconnaissent le symbole du clan Nosferatu et devinent que c'est ainsi que les Nosferatu font la publicité de leurs services.</div></details>
+
+  <details><summary><span>Natacha</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Ancienne Primogène du clan Gangrel, Natacha a été en 1940 un soutien crucial pour le Prince Gosuin en servant d'yeux et d'oreilles pendant qu'il se cachait durant le putsch de Tarcisus. Elle est particulièrement célèbre pour avoir giflé publiquement Franz Derijk à l'Élysée lors de la présentation de son infante Suzanne Gourand, qu'elle percevait comme une parodie insultante des idéaux féministes. C'est également elle qui a découvert et présenté à la cour le Vénérable, le plus ancien membre de la Descendance de la ville, après son réveil causé par les bombardements de la Seconde Guerre mondiale. Souhaitant abandonner ses responsabilités pour retourner à la vie sauvage, elle a étreint Henri Bowens et Chriss au milieu des années 1980 afin qu'ils prennent sa suite, avant de se retirer de la cour en 1988 et de quitter définitivement la Camarilla en 1999.</div></details>
+
+  <details><summary><span>Neve Rosetti</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">L'une des plus anciennes Descendants de la ville, Neve est de loin la plus ancienne Ventrue, infante, tout comme Gosuin, de la défunte princesse Hélène. Neve ne s'implique pas directement dans la politique, mais elle conseille Gosuin et passe la plupart de son temps à utiliser son intelligence et ses remarques sarcastiques pour s'amuser à la Cour. C'est elle qui a donné à Thomas son titre de Harpie. En tant que Harpie aînée, elle se trouve dans une situation confortable : prestige, respect et aucune responsabilité dangereuse. Elle avait l'habitude de tourmenter ses victimes en tandem avec Thomas Durieux, Ventrue aussi, mais il a été tué lors du récent raid du Sabbat.<br><br>
+  Présente avant l'attaque, se serait disputée avec Alicia Vandenstree.<br><br>
+  Présente le 10/02 à l'Elyseum (Opéra). Parle à Viktor qui semble mettre en avant l'importance de montrer leur soutien au Prince.<br><br>
+  <div class="box gallery" data-prefix="Neve" data-count="3"></div></div></details>
+
+  <details><summary><span>Paul Gravier</span><span class="char-meta status-warn">Inactif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Paul Gravier était Gangrel étreint en 1993 par un jeune marginal de son clan. Ancien artiste de rue talentueux, il a été choisi pour l'Étreinte en raison de ses dons exceptionnels de conteur, étant capable de captiver et de divertir n'importe quel public. Lors du départ massif des Gangrel de la Camarilla en 1999, Paul a pris la décision singulière de rester à Liège par fidélité envers sa coterie et parce qu'il se considérait comme un vampire résolument urbain. Il officiait comme garde du corps lors de rendez-vous d'affaires délicats. Paul Gravier a malheureusement trouvé la Mort Finale lors du récent raid du Sabbat qui a frappé la ville.</div></details>
+
+  <details><summary><span>Pieter Scholten</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Pieter semble respecter profondément la vie des mortels et cherche autant que possible à les protéger. Ancien inspecteur de police à Amsterdam, aux Pays-Bas, il enquêtait autrefois sur des affaires de meurtres avant son arrivée ici. Présent dans la ville depuis environ vingt-huit ans, il entretient une certaine proximité avec le shérif Lambert. Il est également ami avec Marie Jourdan et n'a pas semblé particulièrement choqué lorsqu'elle a tué une goule.</div></details>
+
+  <details><summary><span>Rémi</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Rémi est responsable de tout ce qui peut être reniflé, injecté ou fumé. Il s'occupe des activités d'importation et d'exportation. Grâce au travail acharné de Rémi, les toxicomanes de la ville n'ont jamais été confrontés à un quelconque manque, malgré les efforts du gouvernement pour lutter contre ce fléau.</div></details>
+
+  <details><summary><span>Robert Degrelle</span><span class="char-meta status-warn">Inactif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Robert Degrelle était un ancien psychanalyste, dont le destin a basculé en 2000, lorsqu'il a été découvert qu'il cachait et facilitait l'installation d'un nid du Sabbat en ville, qui a conduit à la diablerie de l'infante de Laure Nolveaux. Pour cet acte de trahison, Robert a été jugé et exécuté par son propre frère de sang, Lambert.</div></details>
+
+  <details><summary><span>Sandrine Leroy</span><span class="char-meta status-warn">Inactif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Sandrine Leroy était l'infante de Laure Nolveaux, l'actuelle Gardienne de l'Élysée. Durant l'Occupation, alors qu'elle était encore jeune nouveau-née, elle devint l'amante de Tania, une résistante locale étreinte illégalement chez les Brujah. Elle fut l'un des membres actifs du Club des Femmes Immortelles dès sa fondation par Tania en 1965, y restant impliquée jusqu'à sa mort. Sandrine a trouvé la Mort Finale en 2000, victime d'une diablerie perpétrée par un Lasombra membre du Sabbat. Laure a découvert ses restes — vêtements, cendres et ossements — ainsi que son téléphone dans des buissons après avoir ressenti une douleur spirituelle insoutenable. Son meurtre a conduit à l'exécution du Malkavien Robert Degrelle, coupable d'avoir dissimulé le nid du Sabbat responsable de l'attaque.</div></details>
+
+  <details><summary><span>Scoop</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Le mauvais goût, les rumeurs et le journalisme jaune dans la Cour de la Descendance ont un nom : Scoop. Cru et obscène, il n'a jamais tenu plus d'un mois dans un journal donné, ce qui explique pourquoi le clan l'a accueilli. Si l'on peut supporter son humour dégueulasse et son langage grossier, certaines rumeurs, bonnes ou mauvaises, peuvent être échangées, et les scoops les plus scandaleux ne sont pas toujours les moins vraisemblables.</div></details>
+
+  <details><summary><span>Suzanne Gourand</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Suzanne est l'infante de Franz, choisie pour être la parodie en chair et en os du mouvement féministe des années 1960. Franz a choisi Suzanne car elle était, de fait, « égale aux hommes » : ouvrière d'usine, buvant de la bière, récitant son alphabet en rotant et parlant avec ses poings. Lorsqu'elle tenta de défendre le féminisme, la cause à laquelle elle croyait, cela se retourna contre elle par manque d'éloquence — exactement comme l'avait prévu Franz. Suzanne a repris le Club des femmes immortelles après que Tania ait été tuée lors du récent raid du Sabbat.<br><br>
+  Présente lors de l'attaque.</div></details>
+
+  <details><summary><span>Tania</span><span class="char-meta status-warn">Inactif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Tania a été étreinte illégalement durant la Seconde Guerre mondiale. Avant et après son étreinte, elle fut une résistante locale active durant l'Occupation allemande. En 1965, elle a fondé le Club des Femmes Immortelles afin de lutter contre la misogynie active et passive d'une société vampirique féodale et conservatrice. Tania était une amie très proche du Primogène Brujah, Théodore Jacob, qui voyait en elle l'incarnation des idéaux de son clan. Elle était également l'une des rares membres du Club de La Main Morte. Elle a trouvé la Mort Finale durant le récent raid du Sabbat. Sa disparition a laissé un grand vide pour toute la ville.</div></details>
+
+  <details><summary><span>Tarcisus</span><span class="char-meta status-warn">Inactif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Tarcisus est surtout célèbre pour son coup d'État de 1939, durant lequel il profite du chaos de la Seconde Guerre mondiale et du soutien de Vienne pour s'emparer de la Praxis et régner en tyran sur la cité. Décrit comme un chercheur et un thaumaturge d'une grande intelligence, il a néanmoins mené un régime de terreur marqué par des exécutions fréquentes et une collaboration étroite avec les forces d'occupation pour asseoir son autorité. Après l'échec de la consolidation de son pouvoir à la Libération, il est « promu » au rang de Lord par son clan et quitte Liège pour un domaine situé plus à l'Est, laissant sa place de Régent et de Primogène à son infant Lyle Kersten.<br><br>
+  <div class="box gallery" data-prefix="Tarcisus" data-count="3"></div></div></details>
+
+  <details><summary><span>Térence</span><span class="char-meta status-warn">Inactif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Térence était un membre de la coterie de Fred aux côtés d'autres marginaux et nouveau-nés. Il occupait le rôle de mécanicien pour la Descendance liégeoise, étant le contact privilégié pour toute réparation ou préparation de véhicule. Très lié aux punks sans-abri de la ville avec lesquels il échangeait régulièrement des rumeurs, il se montrait particulièrement protecteur envers eux. Térence a malheureusement trouvé la Mort Finale lors du récent raid du Sabbat.</div></details>
+
+  <details><summary><span>Théodore Grignoux</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Primogène et le plus vieux Brujah en ville, Théodore est toujours prêt à discuter, même avec des nouveau-nés. Théodore exerce une influence sur la plupart des journaux, et sa participation contribue activement au maintien de la Mascarade. C'est également un Brujah très expressif et franc, dont les mots sont généralement suivis d'actions. Alors que Théodore est généralement perçu comme un vampire lucide et terre-à-terre, son soutien au prince Gosuin est souvent accusé d'être guidé par une amitié jugée — à tort ou à raison — inconditionnelle. Théodore est également connu pour être très défensif à l'égard de son domaine, l'un des plus vastes domaines personnels de la ville. Il a tué un intrus Tremere durant les mouvements révolutionnaires de 1830. Théodore a appelé publiquement à de nouvelles Étreintes et à l'accueil de nouveaux arrivants pour compenser les pertes subies, au mépris de la troisième Tradition.<br><br>
+  Présent lors de l'attaque.<br><br>
+  <div class="box gallery" data-prefix="Theodore" data-count="6"></div></div></details>
+
+  <details><summary><span>Thomas Durieux</span><span class="char-meta status-warn">Inactif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Dans sa vie mortelle, Thomas Durieux était un étudiant en droit brillant, spécialisé en diplomatie internationale, avant d'être Étreint en 1908 par Christophe de Bri-Levêque. Il est resté célèbre pour son appartenance à la coterie des « Fleurs de la Belle Époque », au sein de laquelle il était le confident et l'ami très proche de Claudia Vonïgner, Laure Nolveaux et Jérôme Lehin. Nommé Harpie dans les années 1950, il formait avec Neve Rosetti un duo redoutable à l'Élysée, excellant dans l'art de la joute verbale et de l'humiliation sociale. Il trouva la Mort Finale durant le récent raid du Sabbat contre l'Élysée.</div></details>
+
+  <details><summary><span>Tristan van Roy</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Tristan est un habitué des Elysiums arrivé à Liège vers 2000, qui traîne l'oreille là où ça jase. Il travaille comme coursier efficace, se fait payer en sang de vampire, sait voler et dispose de plusieurs véhicules. Protecteur avec ses proches mais foncièrement lâche face au conflit, il a perdu Thomas Durieux lors du raid du Sabbat.</div></details>
+
+  <details><summary><span>Urbain Delacour</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Urbain a toujours été un homme renfermé, depuis son arrivée de Paris dans les années 1910. Très peu le connaissent réellement au-delà de son statut de sire d'Alicia et d'artiste raté — peintre, du moins d'après les quelques expositions de galerie qu'il a données entre les années 1950 et 1960, dans un style fauviste aujourd'hui largement oublié. Urbain est avant tout un solitaire : il travaille seul et, depuis les années 1960, n'a plus rien montré à personne. Les ragots à son sujet persistent. On murmure qu'il n'a pas eu l'intelligence de se renseigner sur Alicia avant de la choisir, découvrant trop tard que le roman qui l'avait fasciné n'était pas le sien mais celui de Grégory. Le scandale ne s'est pas arrêté là : lors de son propre vernissage, Urbain a été expulsé, au bord de la frénésie, après qu'Alicia a publiquement insulté ses œuvres, scellant définitivement sa disgrâce.</div></details>
+
+  <details><summary><span>Vénérable</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Sans doute le plus ancien des Descendants de la ville, le Vénérable reste seul et entretient peu de contacts avec les non-Gangrel. Il ne chasse pas les visiteurs s'ils le trouvent, mais ne recherche pas ouvertement leur présence. Étreint pendant l'Âge des Ténèbres, le Vénérable est resté longtemps en torpeur jusqu'à ce qu'il se réveille à la suite des bombardements de la Seconde Guerre mondiale.</div></details>
+
+  <details><summary><span>Victor de Sainte-Croix</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Le Primogène Malkavien Victor dégage classe, élégance et bonnes manières. Il a été Étreint pendant la Première Guerre mondiale. Doté d'une bonne diction et d'un esprit vif, Victor se fond généralement bien dans l'Élysée, même s'il a ses moments de discours passionnés et débridés.<br><br>
+  Non présent lors de l'attaque. Présent le 10/02 à l'Elyseum (Opéra). Parle à Neve de l'importance de montrer leur soutien au Prince.</div></details>
+
+  <details><summary><span>Walter</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Walter était un Brujah d'origine britannique, qui s'est illustré comme espion et résistant pendant la Seconde Guerre mondiale. Disposant d'influences importantes dans des secteurs clés, il a malheureusement trouvé la mort lors du récent raid du Sabbat alors qu'il se trouvait à l'Élysée.</div></details>
+
+  <details><summary><span>Xavier</span><span class="char-meta status-good">Actif</span><span class="arrow">▶</span></summary>
+  <div class="char-content box">Patriarche du clan, Xavier est un être social qui a été à la fois un très bon shérif et un excellent Primogène jusqu'à ce qu'il prenne sa « retraite ». Il est resté actif et impliqué dans la politique ainsi que dans la vie mondaine des vampires. Il est souvent sollicité pour parler d'art et de religion. Pour la Cour, Xavier est le protecteur des autres Malkaviens, qui sont ses chers et uniques infants. Il a pris sa retraite de ses fonctions de Primogène et de Prévôt, mais la plupart viennent encore le voir à la place de Victor pour résoudre certaines questions délicates.</div></details>
+
+  <details><summary><span>Groupes</span><span class="char-meta status-alert">ERROR</span><span class="arrow">▶</span></summary>
+  <div class="box gallery" data-prefix="Group" data-count="25"></div></div></details>
+
+  <!-- Lightbox -->
+  <div id="lightbox" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:9999;justify-content:center;align-items:center;flex-direction:column">
+    <img id="lightbox-img" style="max-width:90%;max-height:80%;object-fit:contain">
+    <div id="lightbox-caption" style="margin-top:15px;color:#0f8;font-style:italic;text-align:center;max-width:80%;display:none"></div>
+  </div>
 </section>
 
 <!-- ENQUÊTES -->
 <section id="enquetes">
-<h2>Dossiers d'enquête</h2>
-<details class="enquete">
-<summary><span class="enq-title">Affaire Degrelle</span><span class="enq-meta status-good">Statut : Classée</span><span class="arrow">▶</span></summary>
-<div class="enquete-content box">
-<p>En 2000, la disparition soudaine de Sandrine Leroy, infante de la Gardienne de l'Élysée, déclencha une enquête, menée conjointement par Laure Nolveaux et le Shérif Lambert.<br>
-Les investigations révélèrent rapidement qu'une cellule du Sabbat s'était infiltrée dans le domaine, trouvant refuge dans le repaire de Robert Degrelle.<br>
-Ce dernier, au mépris des Traditions, aidait activement ces ennemis de la Camarilla à se cacher.<br>
-Lambert dirigea alors l’assaut final avec une efficacité brutale : le nid de l'ennemi fut totalement détruit et tous ses membres furent éliminés.<br>
-Sur les lieux mêmes du massacre, Robert Degrelle fut jugé pour haute trahison et exécuté par le Shérif sur ordre du Prince Gosuin.<br>
-Robert Degrelle a été jugé sur place pour haute trahison et exécuté par Lambert.<br>
-Dans la confusion de cette nuit, un allié de Degrelle, un Nosfératu nommé Heudebert, disparut sans laisser de trace et demeure introuvable depuis lors.<br>
-Pour garantir le respect absolu de la Mascarade, les bâtiments ayant servi de refuge au Sabbat furent entièrement rasés, le Prince ordonnant de longs travaux publics pour effacer toute souillure de cet événement.</p>
-</div>
-</details>
+  <h2>Dossiers d'enquête</h2>
 
-<details class="enquete">
-<summary><span class="enq-title">Attaque de l'Opéra</span><span class="enq-meta status-warn">Statut : Ouverte</span><span class="arrow">▶</span></summary>
-<div class="enquete-content box">
-<p>Lors d'un rassemblement à l'Élysée de l'Opéra Royal, le Sabbat a lancé une attaque brutale et coordonnée.<br>
-Les clans Brujah et Gangrel ont tenu la ligne de front, subissant de lourdes pertes pour protéger la cité.<br>
-L'artillerie sorcière du clan Tremere a détruit les assaillants restants, et Lambert a traqué les fuyards avec des Brujah survivants.<br>
-Pour préserver la Mascarade, l'incident a été couvert comme une attaque terroriste. Deux mortels ont été sélectionnés pour confesser les crimes et sont en détention.</p>
-<p><strong>Bilan des pertes :</strong></p>
-<ul><li>Tania</li><li>Léon</li><li>Walter</li><li>Paul Gravier</li><li>Marie Jourdan</li><li>Térence</li><li>Luc</li><li>Annabelle Vicomte</li><li>Thomas Durieux</li></ul>
-<p>Tous les assaillants connus ont été éliminés.</p>
-</div>
-</details>
+  <details><summary><span>Affaire Degrelle</span><span class="enq-meta status-good">Statut : Classée</span><span class="arrow">▶</span></summary>
+  <div class="enq-content box">
+    En 2000, la disparition soudaine de Sandrine Leroy, infante de la Gardienne de l'Élysée, déclencha une enquête menée conjointement par Laure Nolveaux et le Shérif Lambert. Les investigations révélèrent qu'une cellule du Sabbat s'était infiltrée dans le domaine, trouvant refuge dans le repaire de Robert Degrelle. Ce dernier, au mépris des Traditions, aidait activement ces ennemis de la Camarilla à se cacher. Lambert dirigea l'assaut final avec une efficacité brutale : le nid fut totalement détruit et tous ses membres éliminés. Robert Degrelle fut jugé pour haute trahison et exécuté par le Shérif sur ordre du Prince Gosuin. Dans la confusion de cette nuit, un allié de Degrelle, un Nosfératu nommé Heudebert, disparut sans laisser de trace. Pour garantir la Mascarade, les bâtiments ayant servi de refuge au Sabbat furent entièrement rasés.
+  </div></details>
+
+  <details><summary><span>Attaque de l'Opéra</span><span class="enq-meta status-warn">Statut : Ouverte</span><span class="arrow">▶</span></summary>
+  <div class="enq-content box">
+    Lors d'un rassemblement à l'Élysée de l'Opéra Royal, le Sabbat a lancé une attaque brutale et coordonnée. Les clans Brujah et Gangrel ont tenu la ligne de front, subissant de lourdes pertes pour protéger la cité. L'artillerie sorcière du clan Tremere a détruit les assaillants restants, et Lambert a traqué les fuyards avec des Brujah survivants. Pour préserver la Mascarade, l'incident a été couvert comme une attaque terroriste. Deux mortels ont été sélectionnés pour confesser les crimes et sont en détention.
+    <p><strong>Bilan des pertes :</strong> Tania, Léon, Walter, Paul Gravier, Marie Jourdan, Térence, Luc, Annabelle Vicomte, Thomas Durieux.</p>
+    <p>Tous les assaillants connus ont été éliminés.</p>
+  </div></details>
 </section>
 
 <!-- MESSAGERIE -->
 <section id="messagerie">
-<h2>Messagerie interne</h2>
-<div id="messages"></div>
-<div class="box">
-<strong>Nouveau message :</strong><br>
-<input type="text" id="username" placeholder="Votre nom"><br><br>
-<input type="text" id="sujet" placeholder="Sujet"><br><br>
-<textarea id="message" placeholder="Rédiger message..."></textarea><br><br>
-<button onclick="envoyerMessage()">Envoyer</button>
-</div>
+  <h2>Messagerie interne</h2>
+  <div id="messages"></div>
+  <div class="box">
+    <strong>Nouveau message :</strong><br>
+    <input type="text" id="username" placeholder="Votre nom"><br><br>
+    <input type="text" id="sujet" placeholder="Sujet"><br><br>
+    <textarea id="message" placeholder="Rédiger message..."></textarea><br><br>
+    <button onclick="envoyerMessage()">Envoyer</button>
+  </div>
 </section>
 
 <!-- ARCHIVES -->
 <section id="archives">
-<h2>Archives</h2>
-<div class="box">
-<h3>Chronologie</h3>
-???? — Childéric, Alterec, et Clotilde se succèdent à la tête de la ville<br>
-1453 — Hélène de Chantraine devient Princesse de Liège<br>
-1493 — La Camarilla est créée à la Convention d'Épines<br>
-16XX — Liège rejoint la Camarilla<br>
-1793 — Hélène de Chantraine meurt pendant la seconde restauration autrichienne<br>
-1814 — Madeleine d’Aurigny devient Marquise de Liège pendant les guerres napoléoniennes, la ville se soumet à Paris<br>
-1830 — Le Consortium est créé<br>
-1915 — Jean Gosuin devient Prince de Liège pendant la première guerre mondiale, la ville rejoint le Consortium<br>
-1939 — Tarcisus devient Prince de Liège pendant la seconde guerre mondiale<br>
-1945 — Jean Gosuin redevient Prince de Liège pendant la libération<br>
-1965 — Fondation du Club des Femmes Immortelles par Tania<br>
-1972 — Arrivée du clan Giovanni à Liège<br>
-1991 — Signature du traité de non-agression avec les Lupins locaux, négocié par Chriss<br>
-1998 — Les Giovanni quittent Liège<br>
-1999 — Les Gangrel quittent la Camarilla<br>
-2000 — Affaire Degrelle<br>
-09/01/2008 — Raid du Sabbat à l'Opéra Royal<br>
-</div>
+  <h2>Archives</h2>
+  <div class="box">
+    <h3>Chronologie</h3>
+    ???? — Childéric, Alterec, et Clotilde se succèdent à la tête de la ville<br>
+    1453 — Hélène de Chantraine devient Princesse de Liège<br>
+    1493 — La Camarilla est créée à la Convention d'Épines<br>
+    16XX — Liège rejoint la Camarilla<br>
+    1793 — Hélène de Chantraine meurt pendant la seconde restauration autrichienne<br>
+    1814 — Madeleine d'Aurigny devient Marquise de Liège, la ville se soumet à Paris<br>
+    1830 — Le Consortium est créé<br>
+    1915 — Jean Gosuin devient Prince de Liège, la ville rejoint le Consortium<br>
+    1939 — Tarcisus devient Prince de Liège<br>
+    1945 — Jean Gosuin redevient Prince de Liège<br>
+    1965 — Fondation du Club des Femmes Immortelles par Tania<br>
+    1972 — Arrivée du clan Giovanni à Liège<br>
+    1991 — Signature du traité de non-agression avec les Lupins locaux<br>
+    1998 — Les Giovanni quittent Liège<br>
+    1999 — Les Gangrel quittent la Camarilla<br>
+    2000 — Affaire Degrelle<br>
+    09/01/2008 — Raid du Sabbat à l'Opéra Royal
+  </div>
 
-<div class="box">
-<h3>Calendrier opérationnel</h3>
-
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-<button onclick="prevMonth()">◀</button>
-<strong id="calendarTitle"></strong>
-<button onclick="nextMonth()">▶</button>
-</div>
-
-<div id="calendar" style="
-display:grid;
-grid-template-columns:repeat(7,1fr);
-gap:5px;
-text-align:center;
-"></div>
-
-<br>
-
-<div>
-<input type="date" id="eventDate">
-<input type="text" id="eventText" placeholder="Nouvel événement...">
-<button onclick="addEvent()">Ajouter</button>
-</div>
-
-</div>
-
+  <div class="box">
+    <h3>Calendrier opérationnel</h3>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <button onclick="prevMonth()">◀</button>
+      <strong id="calendarTitle"></strong>
+      <button onclick="nextMonth()">▶</button>
+    </div>
+    <div id="calendar" style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px;text-align:center"></div>
+    <br>
+    <div>
+      <input type="date" id="eventDate">
+      <input type="text" id="eventText" placeholder="Nouvel événement...">
+      <button onclick="addEvent()">Ajouter</button>
+    </div>
+  </div>
 </section>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-const firebaseConfig={
-apiKey:"AIzaSyBfrvYyWwrqNC7GuO1Km63wRgIfxtuUGBU",
-authDomain:"liege-by-night.firebaseapp.com",
-projectId:"liege-by-night",
-storageBucket:"liege-by-night.firebasestorage.app",
-messagingSenderId:"453217467536",
-appId:"1:453217467536:web:2ada4ada4a549bf0482c15",
-measurementId:"G-6ERWP95WGM"
-};
-
-const app=initializeApp(firebaseConfig);
-const db=getFirestore(app);
-
-// Envoyer message
-window.envoyerMessage=async function(){
-const u=document.getElementById("username"),s=document.getElementById("sujet"),m=document.getElementById("message");
-const username=u.value.trim()||"Anonyme",sujet=s.value.trim(),message=m.value.trim();
-if(!sujet||!message)return;
-await addDoc(collection(db,"messages"),{expediteur:username,sujet:sujet,contenu:message,date:new Date()});
-u.value="";s.value="";m.value="";
-};
-
-// Charger messages temps réel
-function chargerMessages(){
-const container=document.getElementById("messages");
-const q=query(collection(db,"messages"),orderBy("date","desc"));
-onSnapshot(q,snap=>{container.innerHTML="";snap.forEach(doc=>{const data=doc.data();const box=document.createElement("div");box.className="box";box.innerHTML=`<strong>Expéditeur :</strong> ${data.expediteur}<br><strong>Sujet :</strong> ${data.sujet}<p>${data.contenu}</p>`;container.appendChild(box);});});
-}
-chargerMessages();
-// =======================
-// CALENDRIER FIREBASE
-// =======================
-
-let currentDate = new Date(2008, 1, 1); // Février 2008
-let calendarEvents = {};
-
-// Rendu calendrier
-function renderCalendar(){
-  const calendar = document.getElementById("calendar");
-  const title = document.getElementById("calendarTitle");
-  if(!calendar || !title) return;
-
-  calendar.innerHTML = "";
-
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth();
-
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
-
-  title.textContent = firstDay.toLocaleString("fr-FR", { month: "long", year: "numeric" });
-
-  const startDay = (firstDay.getDay() + 6) % 7; // Lundi = premier jour
-
-  // Cases vides avant le 1er
-  for(let i=0;i<startDay;i++){
-    calendar.innerHTML += "<div></div>";
-  }
-
-  // Jours du mois
-  for(let d=1; d<=lastDay.getDate(); d++){
-    const dateKey = `${year}-${month+1}-${d}`;
-    const dayBox = document.createElement("div");
-
-    dayBox.style.border = "1px solid #0f8";
-    dayBox.style.padding = "5px";
-    dayBox.style.minHeight = "60px";
-    dayBox.style.fontSize = "0.8em";
-
-    dayBox.innerHTML = `<strong>${d}</strong>`;
-
-    if(calendarEvents[dateKey]){
-      const ul = document.createElement("ul");
-      calendarEvents[dateKey].forEach(ev=>{
-        const li = document.createElement("li");
-        li.textContent = ev;
-        ul.appendChild(li);
-      });
-      dayBox.appendChild(ul);
-    }
-
-    calendar.appendChild(dayBox);
-  }
-}
-
-// Navigation mois
-window.prevMonth = function(){
-  currentDate.setMonth(currentDate.getMonth()-1);
-  renderCalendar();
-}
-
-window.nextMonth = function(){
-  currentDate.setMonth(currentDate.getMonth()+1);
-  renderCalendar();
-}
-
-// Ajouter événement
-window.addEvent = async function(){
-  const dateInput = document.getElementById("eventDate").value;
-  const textInput = document.getElementById("eventText").value.trim();
-  if(!dateInput || !textInput) return;
-
-  const date = new Date(dateInput);
-  const key = `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}`;
-
-  await addDoc(collection(db,"calendar"),{
-    date: key,
-    text: textInput,
-    createdAt: new Date()
-  });
-
-  document.getElementById("eventText").value="";
-}
-
-// Chargement temps réel
-function chargerCalendar(){
-  const q = query(collection(db,"calendar"), orderBy("createdAt","asc"));
-
-  onSnapshot(q, snap=>{
-    calendarEvents = {};
-    snap.forEach(doc=>{
-      const data = doc.data();
-      if(!calendarEvents[data.date]){
-        calendarEvents[data.date] = [];
-      }
-      calendarEvents[data.date].push(data.text);
-    });
-
-    renderCalendar();
-  });
-}
-
-chargerCalendar();
-</script>
 <script>
-// Sélection de l'overlay
-const overlay = document.getElementById('lightboxOverlay');
+// Navigation
+function show(id){
+  document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
 
-// Générer automatiquement les images des galeries
-document.querySelectorAll(".gallery").forEach(gallery => {
-
-  const prefix = gallery.dataset.prefix;
-  const count = parseInt(gallery.dataset.count);
-
-  for(let i = 1; i <= count; i++){
-    const img = document.createElement("img");
-	img.src = "images/" + prefix + i + ".jpg"; 
-	img.dataset.large = img.src;
-    img.className = "thumb";
-
-    img.style.width = "150px";
-    img.style.height = "150px";
-    img.style.objectFit = "cover";
-    img.style.objectPosition = "center";
-    img.style.margin = "5px";
-    img.style.border = "1px solid #0f8";
-    img.style.cursor = "pointer";
-
-    gallery.appendChild(img);
-
-    // Lightbox au clic
-    img.addEventListener('click', () => {
-      const lightboxImage = document.getElementById('lightboxImage');
-      const lightboxCaption = document.getElementById('lightboxCaption');
-      lightboxImage.src = img.dataset.large;
-
-      if(img.dataset.caption){
-        lightboxCaption.textContent = img.dataset.caption;
-        lightboxCaption.style.display = 'block';
-      } else {
-        lightboxCaption.style.display = 'none';
-      }
-
-      overlay.style.display = 'flex';
-    });
+// Terminal
+(function(){
+  const el=document.getElementById('terminal-box');
+  const now=new Date();
+  const p=n=>n.toString().padStart(2,'0');
+  const ts=`${p(now.getDate())}/${p(now.getMonth()+1)}/${now.getFullYear()} ${p(now.getHours())}:${p(now.getMinutes())}:${p(now.getSeconds())}.${now.getMilliseconds().toString().padStart(3,'0')} CET (UTC+01:00)`;
+  const rh=n=>[...Array(n)].map(()=>'abcdef0123456789'[Math.floor(Math.random()*16)]).join('');
+  const session=rh(16),hash=rh(64),ip=[...Array(4)].map(()=>Math.floor(Math.random()*255)).join('.');
+  const lines=[
+    'CONSORTIUM NODE LGE-01','SYS.VERSION 3.4.12-LTS',`kernel ............... 5.12.18`,
+    '[BOOTSTRAP]',`memory check ......... OK`,`integrity hash ....... ${hash.slice(0,16)}`,
+    `ShreckNet modules .... loaded`,`boot latency ........ ${12+Math.floor(Math.random()*28)}ms`,
+    '[AUTH]',`session id ........... ${session}`,`client endpoint ...... ${ip}`,
+    `reverse lookup ....... resolved`,`timestamp ............ ${ts}`,
+    `ShreckNet sync ........ active`,'[READY]','Bienvenue, Censeur.'
+  ];
+  let li=0,ci=0;
+  function type(){
+    if(li>=lines.length)return;
+    if(ci<lines[li].length){el.textContent+=lines[li][ci++];setTimeout(type,12);}
+    else{el.textContent+='\n';li++;ci=0;setTimeout(type,80);}
   }
+  type();
+})();
 
+// Details accordion
+document.querySelectorAll('details').forEach(d=>{
+  const c=d.querySelector('.char-content,.enq-content');
+  if(c)d.addEventListener('toggle',()=>{c.style.maxHeight=d.open?c.scrollHeight+'px':'0';});
 });
 
-// Fermer le lightbox en cliquant sur le fond
-overlay.addEventListener('click', (e) => {
-  if(e.target === overlay){
-    overlay.style.display = 'none';
+// Galeries + lightbox
+const lightbox=document.getElementById('lightbox');
+document.querySelectorAll('.gallery').forEach(g=>{
+  for(let i=1;i<=parseInt(g.dataset.count);i++){
+    const img=document.createElement('img');
+    img.src=`images/${g.dataset.prefix}${i}.jpg`;
+    Object.assign(img.style,{width:'150px',height:'150px',objectFit:'cover',objectPosition:'center',margin:'5px',border:'1px solid #0f8',cursor:'pointer'});
+    img.addEventListener('click',()=>{
+      document.getElementById('lightbox-img').src=img.src;
+      const cap=document.getElementById('lightbox-caption');
+      cap.style.display=img.dataset.caption?(cap.textContent=img.dataset.caption,'block'):'none';
+      lightbox.style.display='flex';
+    });
+    g.appendChild(img);
   }
+});
+lightbox.addEventListener('click',e=>{if(e.target===lightbox)lightbox.style.display='none';});
+</script>
+
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import{getFirestore,collection,addDoc,onSnapshot,query,orderBy}from"https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const app=initializeApp({
+  apiKey:"AIzaSyBfrvYyWwrqNC7GuO1Km63wRgIfxtuUGBU",
+  authDomain:"liege-by-night.firebaseapp.com",
+  projectId:"liege-by-night",
+  storageBucket:"liege-by-night.firebasestorage.app",
+  messagingSenderId:"453217467536",
+  appId:"1:453217467536:web:2ada4ada4a549bf0482c15"
+});
+const db=getFirestore(app);
+
+// Messagerie
+window.envoyerMessage=async function(){
+  const u=document.getElementById('username'),s=document.getElementById('sujet'),m=document.getElementById('message');
+  const username=u.value.trim()||'Anonyme',sujet=s.value.trim(),contenu=m.value.trim();
+  if(!sujet||!contenu)return;
+  await addDoc(collection(db,'messages'),{expediteur:username,sujet,contenu,date:new Date()});
+  u.value=s.value=m.value='';
+};
+onSnapshot(query(collection(db,'messages'),orderBy('date','desc')),snap=>{
+  const c=document.getElementById('messages');
+  c.innerHTML='';
+  snap.forEach(doc=>{
+    const d=doc.data(),box=document.createElement('div');
+    box.className='box';
+    box.innerHTML=`<strong>Expéditeur :</strong> ${d.expediteur}<br><strong>Sujet :</strong> ${d.sujet}<p>${d.contenu}</p>`;
+    c.appendChild(box);
+  });
+});
+
+// Calendrier
+let currentDate=new Date(2008,1,1),calEvents={};
+
+function renderCalendar(){
+  const cal=document.getElementById('calendar'),title=document.getElementById('calendarTitle');
+  if(!cal||!title)return;
+  cal.innerHTML='';
+  const y=currentDate.getFullYear(),m=currentDate.getMonth();
+  title.textContent=new Date(y,m,1).toLocaleString('fr-FR',{month:'long',year:'numeric'});
+  const firstDay=(new Date(y,m,1).getDay()+6)%7;
+  const lastDay=new Date(y,m+1,0).getDate();
+  for(let i=0;i<firstDay;i++)cal.innerHTML+='<div></div>';
+  for(let d=1;d<=lastDay;d++){
+    const key=`${y}-${m+1}-${d}`,div=document.createElement('div');
+    div.style.cssText='border:1px solid #0f8;padding:5px;min-height:60px;font-size:.8em';
+    div.innerHTML=`<strong>${d}</strong>`;
+    if(calEvents[key]){
+      const ul=document.createElement('ul');
+      calEvents[key].forEach(ev=>{const li=document.createElement('li');li.textContent=ev;ul.appendChild(li);});
+      div.appendChild(ul);
+    }
+    cal.appendChild(div);
+  }
+}
+
+window.prevMonth=()=>{currentDate.setMonth(currentDate.getMonth()-1);renderCalendar();};
+window.nextMonth=()=>{currentDate.setMonth(currentDate.getMonth()+1);renderCalendar();};
+
+window.addEvent=async function(){
+  const dateInput=document.getElementById('eventDate').value;
+  const text=document.getElementById('eventText').value.trim();
+  if(!dateInput||!text)return;
+  const d=new Date(dateInput);
+  await addDoc(collection(db,'calendar'),{date:`${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`,text,createdAt:new Date()});
+  document.getElementById('eventText').value='';
+};
+
+onSnapshot(query(collection(db,'calendar'),orderBy('createdAt','asc')),snap=>{
+  calEvents={};
+  snap.forEach(doc=>{const d=doc.data();(calEvents[d.date]||(calEvents[d.date]=[])).push(d.text);});
+  renderCalendar();
 });
 </script>
 </body>
